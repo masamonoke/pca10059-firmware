@@ -1,0 +1,4 @@
+.idea
+.vscode
+armgcc/_build
+armgcc/_test_build
