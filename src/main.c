@@ -1,8 +1,5 @@
-#include <stdbool.h>
-#include <stdint.h>
 #include "nrf_delay.h"
 #include "boards.h"
-#include "nrf.h"
 #include "bsp.h"
 
 #define ID 6608
