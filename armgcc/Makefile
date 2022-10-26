@@ -152,6 +152,7 @@ dfu: $(DFU_PACKAGE)
 	@echo Performing DFU with generated package
 	nrfutil dfu usb-serial -pkg $< -p $(DFU_PORT) -b 115200
 
+
 TEST_OUTPUT = _test_build/test
 
 BUILD_DIR = _test_build
@@ -162,11 +163,6 @@ PREF_DEP_OBJ = $(PREF_OBJ)/$(PREF_DEP)
 DEPS = $(shell find ../$(PREF_DEP) -name '*.c')
 DEPS_OBJ = $(patsubst ../$(PREF_DEP)%.c, $(PREF_DEP_OBJ)%.o, $(DEPS))
 
-PREF_SRC = src
-PREF_SRC_OBJ = $(PREF_OBJ)
-SRC = $(shell find ../$(PREF_SRC) -name '*.c')
-SRC_OBJ = $(patsubst ../$(PREF_SRC)%.c, $(PREF_SRC_OBJ)%.o, $(SRC))
-
 PREF_MODULE = module
 PREF_MODULE_OBJ = $(PREF_OBJ)
 MODULE_SRC = $(shell find ../$(PREF_MODULE) -name '*.c')
@@ -175,18 +171,9 @@ MODULE_OBJ = $(patsubst ../$(PREF_MODULE)%.c, $(PREF_MODULE_OBJ)%.o, $(MODULE_SR
 PREF_TEST_SRC = ../test/test_main.c
 PREF_TEST_OBJ = $(PREF_OBJ)/test/test_main.o
 
-debug:
-	echo $(PREF_MODULE)
-
-run_test:
-	./$(TEST_OUTPUT)
-
 test: $(PREF_TEST_OBJ) $(MODULE_OBJ) $(DEPS_OBJ)
 	gcc -o $(TEST_OUTPUT) _test_build/obj/test/test_main.o $(DEPS_OBJ) $(MODULE_OBJ)
-
-$(PREF_SRC_OBJ)%.o: ../$(PREF_SRC)%.c
-	@mkdir -p $(dir $@)
-	gcc -c $< -o $@
+	./$(TEST_OUTPUT)
 
 $(PREF_TEST_OBJ): $(PREF_TEST_SRC)
 	@mkdir -p $(dir $@)
@@ -200,5 +187,5 @@ $(PREF_DEP_OBJ)%.o: ../$(PREF_DEP)%.c
 	@mkdir -p $(dir $@)
 	gcc -c $< -o $@
 
-all_clean: clean
+all_clean:
 	rm -rf $(BUILD_DIR) $(OUTPUT_DIRECTORY)
