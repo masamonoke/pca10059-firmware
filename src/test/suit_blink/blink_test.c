@@ -13,12 +13,12 @@ TEST_SETUP(LedDriver) {
 }
 
 TEST_TEAR_DOWN(LedDriver) {
-    uint32_t yellow_pin = LED_YELLOW;
+    uint32_t yellow_pin = BSP_LED_YELLOW;
     bsp_board_led_invert(yellow_pin);
 }
 
 TEST(LedDriver, LedOn) {
-    uint32_t yellow_pin = LED_YELLOW;
+    uint32_t yellow_pin = BSP_LED_YELLOW;
     NRF_GPIO_Type* reg = nrf_gpio_pin_port_decode(&yellow_pin);
     uint32_t before_toggle_outset = reg->OUTSET;
     bsp_board_led_invert(yellow_pin);
@@ -28,7 +28,7 @@ TEST(LedDriver, LedOn) {
 }
 
 TEST(LedDriver, LedOff) {
-    uint32_t yellow_pin = LED_YELLOW;
+    uint32_t yellow_pin = BSP_LED_YELLOW;
     bsp_board_led_invert(yellow_pin);
     NRF_GPIO_Type* reg = nrf_gpio_pin_port_decode(&yellow_pin);
     uint32_t after_toggle_outset1 = reg->OUTSET;

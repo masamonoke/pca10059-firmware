@@ -15,7 +15,7 @@ TEST_SETUP(Utils) {
 TEST_TEAR_DOWN(Utils) {}
 
 TEST(Utils, Blink) {
-    uint32_t yellow_pin = LED_YELLOW;
+    uint32_t yellow_pin = BSP_LED_YELLOW;
     NRF_GPIO_Type* reg = nrf_gpio_pin_port_decode(&yellow_pin);
     uint32_t before = reg->OUTSET;
     blink(yellow_pin);

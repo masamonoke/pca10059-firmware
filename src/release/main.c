@@ -1,18 +1,41 @@
-#include "nrf_delay.h"
-#include "boards.h"
-#include "bsp.h"
-#include "nrf_gpio.h"
-#include "../../module/utils/output_utils.h"
+#include "../../module/io/gpio_utils.h"
 
-#define BUTTON NRF_GPIO_PIN_MAP(1, 6)
-#define PIN NRF_GPIO_PIN_MAP(0, 6)
+void modifed_blink(uint32_t led_id) {
+    gpio_utils_turn_on_led(led_id);
+    nrf_delay_ms(500);
+    while(gpio_utils_is_button_released()) {
+        //when button is pressed, the sequence continues
+    }
+    gpio_utils_turn_off_led(led_id);
+    nrf_delay_ms(500);
+}
+
+void play_lights_sequence_modified(const char* sequence) {
+    size_t i = 0;
+    while (sequence[i] != '\0') {
+        if (gpio_utils_is_button_pressed()) {
+            switch (sequence[i]) {
+                case 'R':
+                    modifed_blink(LED_RED);
+                    break;
+                case 'G':
+                    modifed_blink(LED_GREEN);
+                    break;
+                case 'B':
+                    modifed_blink(LED_BLUE);
+                    break;
+                case 'Y':
+                modifed_blink(LED_YELLOW);
+                break;
+            }
+            i++;
+        }
+    }
+}
 
 
 int main(void) {
-    bsp_board_init(BSP_INIT_LEDS);
-    nrf_gpio_cfg_output(PIN);
-    nrf_gpio_pin_write(PIN, 0);
     while (true) {
-        
+        play_lights_sequence_modified("RRRGGGRRBB");
     }
 }
