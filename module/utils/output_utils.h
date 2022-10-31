@@ -5,9 +5,9 @@
 #include "boards.h"
 #include "bsp.h"
 
-#define LED_GREEN 2
-#define LED_RED 1
-#define LED_YELLOW 0
+#define BSP_LED_GREEN 2
+#define BSP_LED_RED 1
+#define BSP_LED_YELLOW 0
 
 void blink(int led_id);
 void pause(int ms);

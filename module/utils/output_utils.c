@@ -9,13 +9,13 @@ void blink_bytes(size_t const size, void const * const ptr) {
         for (j = 7; j >= 0; j--) {
             byte = (b[i] >> j) & 1;
             if (byte == 0) {
-                blink_ms_ms(LED_RED, 1000, 500);
+                blink_ms_ms(BSP_LED_RED, 1000, 500);
             } else {
-                blink_ms_ms(LED_GREEN, 1000, 500);
+                blink_ms_ms(BSP_LED_GREEN, 1000, 500);
             }
         }
     }
-    blink(LED_YELLOW);
+    blink(BSP_LED_YELLOW);
     pause(500);
 }
 
