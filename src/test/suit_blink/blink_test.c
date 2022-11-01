@@ -1,5 +1,5 @@
-#include "../../dependency/unity/unity_fixture.h"
-#include "../../module/utils/output_utils.h"
+#include "dependency/unity/unity_fixture.h"
+#include "module/utils/output_utils.h"
 
 #include "nrf_delay.h"
 #include "boards.h"
