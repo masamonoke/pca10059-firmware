@@ -1,5 +1,5 @@
-#include "../../dependency/unity/unity_fixture.h"
-#include "../../module/io/gpio_utils.h"
+#include "dependency/unity/unity_fixture.h"
+#include "module/io/gpio_utils.h"
 
 TEST_GROUP(GPIOUtils);
 
@@ -22,11 +22,11 @@ TEST(GPIOUtils, IsLedOff) {
 TEST(GPIOUtils, IsButtonPressed) {
     nrf_gpio_cfg_output(BUTTON);
     nrf_gpio_pin_write(BUTTON, 0);
-    TEST_ASSERT_TRUE(gpio_utils_is_button_pressed(BUTTON));
+    TEST_ASSERT_TRUE(gpio_utils_is_button_pressed());
 }
 
 TEST(GPIOUtils, IsButtonReleased) {
-    TEST_ASSERT_TRUE(gpio_utils_is_button_released(BUTTON));
+    TEST_ASSERT_TRUE(gpio_utils_is_button_released());
 }
 
 TEST(GPIOUtils, LedInvert) {
