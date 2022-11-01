@@ -2,14 +2,29 @@
 
 #define STRING_SEQUENCE "RYRRGGBGRRBB"
 
-void modifed_blink(uint32_t led_id) {
+//delay modified to prevent cases when delay duration is
+//on click and enable ability to "click" the sequence
+void modified_delay(uint32_t ms) {
+    if (ms == 0) {
+        return;
+    }
+
+    do {
+        nrf_delay_us(1000);
+        if (gpio_utils_is_button_released()) {
+            return;
+        }
+    } while (--ms);
+}
+
+void modified_blink(uint32_t led_id) {
     gpio_utils_turn_on_led(led_id);
-    gpio_utils_pause();
+    modified_delay(500);
     while(gpio_utils_is_button_released()) {
         //when button is pressed, the sequence continues
     }
     gpio_utils_turn_off_led(led_id);
-    gpio_utils_pause();
+    modified_delay(500);
 }
 
 void play_lights_sequence(const char* sequence) {
@@ -18,23 +33,22 @@ void play_lights_sequence(const char* sequence) {
         if (gpio_utils_is_button_pressed()) {
             switch (sequence[color_char_idx]) {
                 case 'R':
-                    modifed_blink(LED_RED);
+                    modified_blink(LED_RED);
                     break;
                 case 'G':
-                    modifed_blink(LED_GREEN);
+                    modified_blink(LED_GREEN);
                     break;
                 case 'B':
-                    modifed_blink(LED_BLUE);
+                    modified_blink(LED_BLUE);
                     break;
                 case 'Y':
-                    modifed_blink(LED_YELLOW);
+                    modified_blink(LED_YELLOW);
                     break;
             }
             color_char_idx++;
         }
     }
 }
-
 
 int main(void) {
     while (true) {
