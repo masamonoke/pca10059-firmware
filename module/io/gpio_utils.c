@@ -12,7 +12,7 @@ void gpio_utils_turn_off_led(uint32_t led_id) {
     nrf_gpio_pin_write(led_id, 1);
 }
 
-bool gpio_utils_listen_button_input() {
+bool gpio_utils_listen_button_input(void) {
     nrf_gpio_cfg_input(BUTTON, NRF_GPIO_PIN_PULLUP);
     return nrf_gpio_pin_read(BUTTON);
 }

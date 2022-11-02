@@ -1,6 +1,4 @@
 .*
 _*
-armgcc/_build
-armgcc/_test_build
 armgcc/debug
 src/debug
