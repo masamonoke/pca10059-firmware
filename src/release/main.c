@@ -1,6 +1,6 @@
 #include "module/io/gpio_utils.h"
 
-#define STRING_SEQUENCE "RYRRGGBGRRBB"
+#define COLORS_SEQUENCE "RYRRGGBGRRBB"
 
 //delay modified to prevent cases when click happend during delay
 //and enable ability to "click" the sequence
@@ -27,7 +27,7 @@ void modified_blink(uint32_t led_id) {
     modified_delay(500);
 }
 
-void play_lights_sequence(const char* sequence) {
+void play_lights_sequence(const char* const sequence) {
     size_t color_char_idx = 0;
     while (sequence[color_char_idx] != '\0') {
         if (gpio_utils_is_button_pressed()) {
@@ -51,7 +51,8 @@ void play_lights_sequence(const char* sequence) {
 }
 
 int main(void) {
+    gpio_utils_init();
     while (true) {
-        play_lights_sequence(STRING_SEQUENCE);
+        play_lights_sequence(COLORS_SEQUENCE);
     }
 }

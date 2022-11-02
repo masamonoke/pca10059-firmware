@@ -3,17 +3,14 @@
 #define PAUSE_TIME_MS 500
 
 void gpio_utils_turn_on_led(uint32_t led_id) {
-    nrf_gpio_cfg_output(led_id);
     nrf_gpio_pin_write(led_id, 0);
 }
 
 void gpio_utils_turn_off_led(uint32_t led_id) {
-    nrf_gpio_cfg_output(led_id);
     nrf_gpio_pin_write(led_id, 1);
 }
 
-bool gpio_utils_listen_button_input(void) {
-    nrf_gpio_cfg_input(BUTTON, NRF_GPIO_PIN_PULLUP);
+bool gpio_utils_read_button_input(void) {
     return nrf_gpio_pin_read(BUTTON);
 }
 
@@ -33,18 +30,30 @@ void gpio_utils_blink(uint32_t led_id) {
 }
 
 bool gpio_utils_is_button_pressed(void) {
-    return gpio_utils_listen_button_input() == 0;
+    return gpio_utils_read_button_input() == 0;
 }
 
 bool gpio_utils_is_button_released(void) {
-    return gpio_utils_listen_button_input() == 1;
+    return gpio_utils_read_button_input() == 1;
 }
 
-bool gpio_utils_is_pin_on(uint32_t pin_id) {
-    nrf_gpio_cfg_output(pin_id);
-    return !nrf_gpio_pin_out_read(pin_id);
+bool gpio_utils_is_led_on(uint32_t led_id) {
+    nrf_gpio_cfg_output(led_id);
+    return !nrf_gpio_pin_out_read(led_id);
 }
 
 void gpio_utils_pause(void) {
     nrf_delay_ms(PAUSE_TIME_MS);
+}
+
+void gpio_utils_init(void) {
+    nrf_gpio_cfg_output(LED_YELLOW);
+    nrf_gpio_cfg_output(LED_BLUE);
+    nrf_gpio_cfg_output(LED_RED);
+    nrf_gpio_cfg_output(LED_GREEN);
+    gpio_utils_turn_off_led(LED_RED);
+    gpio_utils_turn_off_led(LED_BLUE);
+    gpio_utils_turn_off_led(LED_GREEN);
+    gpio_utils_turn_off_led(LED_YELLOW);
+    nrf_gpio_cfg_input(BUTTON, NRF_GPIO_PIN_PULLUP);
 }

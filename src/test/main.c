@@ -11,6 +11,7 @@ static void run_all_test(void) {
 
 int main(int argc, const char* argv[]) {
     bsp_board_init(BSP_INIT_LEDS);
+    //invert of result because function returns 0 when all tests passed
     int is_passed = !UnityMain(argc, argv, run_all_test);
     while (true) {
         if (is_passed) {

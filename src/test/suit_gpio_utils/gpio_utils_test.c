@@ -3,20 +3,22 @@
 
 TEST_GROUP(GPIOUtils);
 
-TEST_SETUP(GPIOUtils) {}
+TEST_SETUP(GPIOUtils) {
+    gpio_utils_init();
+}
 
 TEST_TEAR_DOWN(GPIOUtils) {}
 
 TEST(GPIOUtils, IsLedOn) {
     gpio_utils_turn_on_led(LED_YELLOW);
-    TEST_ASSERT_TRUE(gpio_utils_is_pin_on(LED_YELLOW));
+    TEST_ASSERT_TRUE(gpio_utils_is_led_on(LED_YELLOW));
     gpio_utils_turn_off_led(LED_YELLOW);
 }
 
 TEST(GPIOUtils, IsLedOff) {
     gpio_utils_turn_on_led(LED_YELLOW);
     gpio_utils_turn_off_led(LED_YELLOW);
-    TEST_ASSERT_TRUE(!gpio_utils_is_pin_on(LED_YELLOW));
+    TEST_ASSERT_TRUE(!gpio_utils_is_led_on(LED_YELLOW));
 }
 
 TEST(GPIOUtils, IsButtonPressed) {
@@ -31,7 +33,7 @@ TEST(GPIOUtils, IsButtonReleased) {
 
 TEST(GPIOUtils, LedInvert) {
     gpio_utils_led_invert(LED_YELLOW);
-    TEST_ASSERT_TRUE(gpio_utils_is_pin_on(LED_YELLOW));
+    TEST_ASSERT_TRUE(gpio_utils_is_led_on(LED_YELLOW));
     gpio_utils_led_invert(LED_YELLOW);
-    TEST_ASSERT_TRUE(!gpio_utils_is_pin_on(LED_YELLOW));
+    TEST_ASSERT_TRUE(!gpio_utils_is_led_on(LED_YELLOW));
 }
