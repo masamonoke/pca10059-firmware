@@ -2,8 +2,8 @@
 
 #define STRING_SEQUENCE "RYRRGGBGRRBB"
 
-//delay modified to prevent cases when delay duration is
-//on click and enable ability to "click" the sequence
+//delay modified to prevent cases when click happend during delay
+//and enable ability to "click" the sequence
 void modified_delay(uint32_t ms) {
     if (ms == 0) {
         return;
