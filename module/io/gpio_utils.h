@@ -10,11 +10,13 @@
 #define LED_RED     NRF_GPIO_PIN_MAP(0, 8)
 #define LED_BLUE    NRF_GPIO_PIN_MAP(0, 12)
 
+void gpio_utils_init(void);
+
 void gpio_utils_turn_on_led(uint32_t led_id);
 
 void gpio_utils_turn_off_led(uint32_t led_id);
 
-bool gpio_utils_listen_button_input(void);
+bool gpio_utils_read_button_input(void);
 
 bool gpio_utils_is_button_pressed(void);
 
@@ -24,7 +26,7 @@ void gpio_utils_led_invert(uint32_t led_id);
 
 void gpio_utils_blink(uint32_t led_id);
 
-bool gpio_utils_is_pin_on(uint32_t pin_id);
+bool gpio_utils_is_led_on(uint32_t pin_id);
 
 void gpio_utils_pause(void);
 

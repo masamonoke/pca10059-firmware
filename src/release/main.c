@@ -1,57 +1,64 @@
-#include "module/io/gpio_utils.h"
+#include "module/io/led.h"
+#include "module/io/button.h"
+#include "module/timer/timer_utils.h"
 
-#define STRING_SEQUENCE "RYRRGGBGRRBB"
+#define COLOR_SEQUENCE "RYRRGGBGRRBB"
 
-//delay modified to prevent cases when click happend during delay
-//and enable ability to "click" the sequence
-void modified_delay(uint32_t ms) {
-    if (ms == 0) {
-        return;
-    }
-
-    do {
-        nrf_delay_us(1000);
-        if (gpio_utils_is_button_released()) {
-            return;
-        }
-    } while (--ms);
-}
-
-void modified_blink(uint32_t led_id) {
-    gpio_utils_turn_on_led(led_id);
-    modified_delay(500);
-    while(gpio_utils_is_button_released()) {
-        //when button is pressed, the sequence continues
-    }
-    gpio_utils_turn_off_led(led_id);
-    modified_delay(500);
-}
-
-void play_lights_sequence(const char* sequence) {
+void play_lights_sequence(const char* const sequence) {
     size_t color_char_idx = 0;
     while (sequence[color_char_idx] != '\0') {
-        if (gpio_utils_is_button_pressed()) {
-            switch (sequence[color_char_idx]) {
-                case 'R':
-                    modified_blink(LED_RED);
-                    break;
-                case 'G':
-                    modified_blink(LED_GREEN);
-                    break;
-                case 'B':
-                    modified_blink(LED_BLUE);
-                    break;
-                case 'Y':
-                    modified_blink(LED_YELLOW);
-                    break;
-            }
-            color_char_idx++;
+        switch (sequence[color_char_idx]) {
+            case 'R':
+                led_blink_pwm(LED_RED);
+                break;
+            case 'G':
+                led_blink_pwm(LED_GREEN);
+                break;
+            case 'B':
+                led_blink_pwm(LED_BLUE);
+                break;
+            case 'Y':
+                led_blink_pwm(LED_YELLOW);
+                break;
         }
+        color_char_idx++;
+    }
+}
+
+static bool mode = false;
+
+void press_handler(void) {
+    if (mode) {
+        return;
+    }
+    led_set_duty_cycling_state(true);
+}
+
+void release_handler(void) {
+    if (mode) {
+        return;
+    }
+    led_set_duty_cycling_state(false);
+}
+
+void double_click_handler() {
+    mode = !mode;
+    if (mode) {
+        led_set_duty_cycling_state(true);
+    } else {
+        led_set_duty_cycling_state(false);
     }
 }
 
 int main(void) {
+    timer_utils_init();
+    led_init();
+    button_init();
+    button_init_press_check(press_handler);
+    button_init_release_check(release_handler);
+    button_init_double_click_check(double_click_handler);
+    led_set_duty_cycling_state(false);
     while (true) {
-        play_lights_sequence(STRING_SEQUENCE);
+        play_lights_sequence(COLOR_SEQUENCE);
     }
 }
