@@ -1,6 +1,7 @@
 #include "gpio_utils.h"
 
 #define PAUSE_TIME_MS 500
+#define DEBOUNCE_TIME 10
 
 void gpio_utils_turn_on_led(uint32_t led_id) {
     nrf_gpio_pin_write(led_id, 0);
@@ -30,11 +31,15 @@ void gpio_utils_blink(uint32_t led_id) {
 }
 
 bool gpio_utils_is_button_pressed(void) {
-    return gpio_utils_read_button_input() == 0;
+    if (gpio_utils_read_button_input() == 0) {
+        nrf_delay_ms(DEBOUNCE_TIME);
+        return gpio_utils_read_button_input() == 0;
+    }
+    return false;
 }
 
 bool gpio_utils_is_button_released(void) {
-    return gpio_utils_read_button_input() == 1;
+    return !gpio_utils_is_button_pressed();
 }
 
 bool gpio_utils_is_led_on(uint32_t led_id) {
