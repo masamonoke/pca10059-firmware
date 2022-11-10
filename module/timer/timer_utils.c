@@ -8,4 +8,5 @@ static void lfclk_config(void) {
 
 void timer_utils_init(void) {
     lfclk_config();
+    app_timer_init();
 }
