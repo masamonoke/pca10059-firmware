@@ -72,7 +72,7 @@ static void _s_timers_init(void) {
     APP_ERROR_CHECK(err_code);
 
     err_code = app_timer_create(&turn_on_timer_id, APP_TIMER_MODE_SINGLE_SHOT, _s_turn_on_led_handler);
-    APP_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);  
 }
 
 static led_data_t _s_default_led_data(void) {

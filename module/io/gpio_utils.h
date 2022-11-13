@@ -30,4 +30,6 @@ bool gpio_utils_is_led_on(uint32_t pin_id);
 
 void gpio_utils_pause(void);
 
+void gpio_utils_blink_async(uint32_t led_id, uint16_t delay_ms);
+
 #endif /* MODULE_IO_GPIO_UTILS */

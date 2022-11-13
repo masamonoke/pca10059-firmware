@@ -2,7 +2,7 @@
 
 #define DEBOUNCING_TIME 10
 #define DOUBLE_CLICK_TIME 500
-#define CLICK_COUNT 3
+#define CLICK_COUNT 2
 
 void(* double_click_handler_func_)(void);
 void(* press_handler_func_)(void);
@@ -128,7 +128,7 @@ void button_init() {
     _s_is_defined_button_state = true;
 }
 
-void button_init_double_click_check(void* handler) {
+void button_init_n_click_check(void* handler) {
     _s_is_double_click_check = true;
     if (handler != NULL) {
         double_click_handler_func_ = handler;
@@ -151,4 +151,9 @@ void button_init_release_check(void* handler) {
     } else {
         release_handler_func_ = handler;
     }
+}
+
+void button_set_n(uint8_t click_count) {
+    #undef CLICK_COUNT
+    #define CLICK_COUNT (click_count);
 }
