@@ -1,7 +1,7 @@
 #ifndef MODULE_IO_LED_PWM
 #define MODULE_IO_LED_PWM
 
-#include "gpio_utils.h"
+#include "module/io/gpio_utils.h"
 #include "app_timer.h"
 
 //TODO: implement parallel pwm blink, add getters and setters

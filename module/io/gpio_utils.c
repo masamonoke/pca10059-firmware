@@ -1,4 +1,5 @@
 #include "gpio_utils.h"
+#include "app_timer.h"
 
 #define PAUSE_TIME_MS 500
 #define DEBOUNCE_TIME 10
@@ -51,6 +52,21 @@ void gpio_utils_pause(void) {
     nrf_delay_ms(PAUSE_TIME_MS);
 }
 
+APP_TIMER_DEF(blink_async_timer_id_);
+
+static uint32_t _s_current_led;
+
+void blink_async_handler(void* p_context) {
+    gpio_utils_led_invert(_s_current_led);
+}
+
+static void _s_timer_init() {
+    ret_code_t err_code;
+
+    err_code = app_timer_create(&blink_async_timer_id_, APP_TIMER_MODE_SINGLE_SHOT, blink_async_handler);
+    APP_ERROR_CHECK(err_code);
+}
+
 void gpio_utils_init(void) {
     nrf_gpio_cfg_output(LED_YELLOW);
     nrf_gpio_cfg_output(LED_BLUE);
@@ -61,4 +77,11 @@ void gpio_utils_init(void) {
     gpio_utils_turn_off_led(LED_GREEN);
     gpio_utils_turn_off_led(LED_YELLOW);
     nrf_gpio_cfg_input(BUTTON, NRF_GPIO_PIN_PULLUP);
+
+    _s_timer_init();
+}
+
+void gpio_utils_blink_async(uint32_t led_id, uint16_t delay_ms) {
+    _s_current_led = led_id;
+    app_timer_start(blink_async_timer_id_, APP_TIMER_TICKS(delay_ms), NULL);
 }
