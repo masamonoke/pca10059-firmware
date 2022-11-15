@@ -10,9 +10,9 @@ typedef struct {
 } rgb_t;
 
 typedef struct {
-    float saturation;
-    float value;
-    float hue;
+    uint8_t saturation;
+    uint8_t value;
+    uint16_t hue;
 } hsv_t;
 
 rgb_t converter_get_rgb_data(uint8_t r, uint8_t g, uint8_t b);
@@ -21,6 +21,6 @@ rgb_t converter_to_rgb_from_hsv(hsv_t hsv_data);
 
 hsv_t converter_to_hsv_from_rgb(rgb_t rgb_data);
 
-hsv_t converter_get_hsv_data(float h, float s, float v);
+hsv_t converter_get_hsv_data(uint16_t h, uint8_t s, uint8_t v);
 
 #endif /* MODULE_COLOR_CONVERTER */

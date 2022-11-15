@@ -20,21 +20,16 @@ const nrf_pwm_sequence_t seq = {
 static void pmw_update_duty_cycle(uint8_t duty_red, uint8_t duty_green, uint8_t duty_blue) {
     if (duty_red >= 100) {
         _s_seq_values->channel_0 = 100;
-
     } else {
         _s_seq_values->channel_0 = duty_red;
     }
-
     if (duty_green >= 100) {
         _s_seq_values->channel_1 = 100;
-
     } else {
         _s_seq_values->channel_1 = duty_green;
     }
-
     if (duty_blue >= 100) {
         _s_seq_values->channel_2 = 100;
-
     } else {
         _s_seq_values->channel_2 = duty_blue;
     }
@@ -50,6 +45,7 @@ static uint8_t _s_current_duty_cycle_r;
 static uint8_t _s_current_duty_cycle_g;
 static uint8_t _s_current_duty_cycle_b;
 static uint8_t _s_current_duty_cycle_step = DUTY_CYCLE_STEP;
+
 void change_duty_cycle_handler(void* p_context) {
     _s_current_duty_cycle_r += _s_current_duty_cycle_step;
     _s_current_duty_cycle_g += _s_current_duty_cycle_step;
@@ -65,6 +61,7 @@ void change_duty_cycle_handler(void* p_context) {
         _s_current_duty_cycle_step = -_s_current_duty_cycle_step;
 
     }
+    
     nordic_rgb_pwm_update_duty_cycle(_s_current_duty_cycle_r, _s_current_duty_cycle_g,
          _s_current_duty_cycle_b);
 }
@@ -145,7 +142,7 @@ void nordic_rgb_pwm_set_color(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 void nordic_rgb_pwm_set_hsv_color(uint16_t h, uint8_t s, uint8_t v) {
-    hsv_t hsv_data = converter_get_hsv_data((float)h, (float)s, (float)v);
+    hsv_t hsv_data = converter_get_hsv_data(h, s, v);
     rgb_t rgb_data = converter_to_rgb_from_hsv(hsv_data);
     nordic_rgb_pwm_set_color(rgb_data.red, rgb_data.green, rgb_data.blue);
 }

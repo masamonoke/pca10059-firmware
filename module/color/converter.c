@@ -34,9 +34,9 @@ hsv_t converter_to_hsv_from_rgb(rgb_t rgb_data) {
     float value = c_max * 100;
 
     hsv_t hsv_data = {
-            .hue = hue,
-            .saturation = saturation,
-            .value = value
+            .hue = (uint16_t) ceilf(hue),
+            .saturation = (uint8_t) ceilf(saturation),
+            .value = (uint8_t) ceilf(value),
     };
 
     return hsv_data;
@@ -54,11 +54,11 @@ rgb_t converter_get_rgb_data(uint8_t r, uint8_t g, uint8_t b) {
 
 //formula from here https://www.rapidtables.com/convert/color/hsv-to-rgb.html
 rgb_t converter_to_rgb_from_hsv(hsv_t hsv_data) {
-    float c = hsv_data.value / 100 * hsv_data.saturation / 100;
-    float x = c * (1 - fabs(fmod(hsv_data.hue / 60, 2) - 1));
-    float m = hsv_data.value / 100 - c;
+    float c = hsv_data.value / 100.f * hsv_data.saturation / 100.f;
+    float x = c * (1 - fabs(fmod(hsv_data.hue / 60.f, 2) - 1));
+    float m = hsv_data.value / 100.f - c;
 
-    uint16_t h = (uint16_t) hsv_data.hue;
+    uint16_t h = hsv_data.hue;
     float r_;
     float g_;
     float b_;
@@ -97,7 +97,11 @@ rgb_t converter_to_rgb_from_hsv(hsv_t hsv_data) {
     return rgb_data;
 }
 
-hsv_t converter_get_hsv_data(float h, float s, float v) {
+hsv_t converter_get_hsv_data(uint16_t h, uint8_t s, uint8_t v) {
+    h = h > 360 ? 360 : h;
+    s = s > 100 ? 100 : s;
+    v = v > 100 ? 100 : v;
+
     hsv_t hsv_data = {
             .hue = h,
             .saturation = s,
