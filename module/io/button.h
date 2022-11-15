@@ -17,10 +17,15 @@ typedef enum {
 } button_state_t;
 
 void button_init();
+
 void button_set_n(uint8_t click_count);
+
 void button_init_n_click_check(void* handler);
+
 void button_init_press_check(void* handler);
+
 void button_init_release_check(void* handler);
+
 void button_set_handler(void* handler);
 
 #endif /* MODULE_IO_BUTTON */
