@@ -1,5 +1,4 @@
 #include "nordic_rgb_pwm_utils.h"
-#include "nrfx_pwm.h"
 #include "app_timer.h"
 #include "module/io/gpio_utils.h"
 #include "module/color/converter.h"
@@ -7,7 +6,7 @@
 
 #define PWM_TOP 100
 
-static nrfx_pwm_t _s_pwm_instance = NRFX_PWM_INSTANCE(0);
+static nrfx_pwm_t _s_pwm_instance;
 static nrf_pwm_values_individual_t _s_seq_values[] = {{ 0, 0, 0, 0 }};
 
 const nrf_pwm_sequence_t seq = {
@@ -115,7 +114,8 @@ void pwm_init(void) {
     gpio_utils_init();
 }
 
-void nordic_rgb_pwm_utils_init(void) {
+void nordic_rgb_pwm_utils_init(nrfx_pwm_t pwm_instance) {
+    _s_pwm_instance = pwm_instance;
     pwm_init();
 }
 

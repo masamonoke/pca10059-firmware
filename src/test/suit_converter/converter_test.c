@@ -1,6 +1,5 @@
 #include "dependency/unity/unity_fixture.h"
 #include "module/color/converter.h"
-#include "module/mocks/runtime_error_stub.h"
 
 TEST_GROUP(Converter);
 

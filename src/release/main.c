@@ -143,7 +143,8 @@ int main(void) {
     app_timer_init();
     nordic_usb_logging_init();
     gpio_utils_init();
-    nordic_rgb_pwm_utils_init();
+    nrfx_pwm_t pwm_instance = NRFX_PWM_INSTANCE(0);
+    nordic_rgb_pwm_utils_init(pwm_instance);
     button_init();
     led_soft_pwm_init();
 

@@ -1,9 +1,10 @@
 #ifndef MODULE_IO_LED_NORDIC_RGB_PWM_UTILS
 #define MODULE_IO_LED_NORDIC_RGB_PWM_UTILS
 
+#include "nrfx_pwm.h"
 #include "module/color/converter.h"
 
-void nordic_rgb_pwm_utils_init(void);
+void nordic_rgb_pwm_utils_init(nrfx_pwm_t pwm_instance);
 
 void nordic_rgb_pwm_update_duty_cycle(uint8_t duty_red, uint8_t duty_green, uint8_t duty_blue);
 
