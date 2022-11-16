@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "queue.h"
+#include "module/error/runtime_error.h"
 
 #define BUFFER_LEN 5000
 
@@ -27,7 +28,7 @@ static bool is_init = false;
 
 void queue_init(void) {
     if (is_init) {
-        //TODO: add error message to errors stack
+        RUNTIME_ERROR("Queue context is already initialized", -1);
         return;
     }
 
