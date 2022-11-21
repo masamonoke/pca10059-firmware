@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "queue.h"
+#include "module/error/runtime_error.h"
 
 #define QUEUE_BUFFER_LEN 1000
 #define QUEUE_OBJECTS_LEN 100
@@ -13,6 +14,10 @@ static uint16_t current_free_object_idx;
 static bool is_init = false;
 
 void queue_ctx_init(void) {
+    if (is_init) {
+        RUNTIME_ERROR("Queue is already initialized", -1);
+        return;
+    }
     buffer_init(&buffer, QUEUE_BUFFER_LEN, &objects,
                 QUEUE_OBJECTS_LEN, &current_free_object_idx);
     is_init = true;

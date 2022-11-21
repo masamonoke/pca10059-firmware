@@ -1,5 +1,5 @@
-#ifndef MODULE_DATASTRUCTURES_QUEUE
-#define MODULE_DATASTRUCTURES_QUEUE
+#ifndef MODULE_DATA_STRUCTURES_QUEUE
+#define MODULE_DATA_STRUCTURES_QUEUE
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -32,4 +32,4 @@ void queue_ctx_empty_half_instance(instance_t* instance);
 
 uint16_t queue_ctx_instance_get_size(instance_t* instance);
 
-#endif /* MODULE_DATASTRUCTURES_QUEUE */
+#endif /* MODULE_DATA_STRUCTURES_QUEUE */

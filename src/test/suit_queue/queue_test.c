@@ -1,6 +1,5 @@
 #include "dependency/unity/unity_fixture.h"
-#include "module/datastructures/queue.h"
-#include "module/mocks/runtime_error_stub.h"
+#include "module/data_structures/queue.h"
 
 TEST_GROUP(Queue);
 

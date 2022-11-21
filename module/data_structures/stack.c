@@ -1,6 +1,8 @@
-#include "stack.h"
 #include <stddef.h>
 #include <stdlib.h>
+
+#include "stack.h"
+#include "module/error/runtime_error.h"
 
 #define STACK_BUFFER_LEN 1000
 #define STACK_OBJECTS_LEN 100
@@ -11,6 +13,10 @@ static uint16_t current_free_object_idx;
 static bool is_init = false;
 
 void stack_ctx_init(void) {
+    if (is_init) {
+        RUNTIME_ERROR("Stack is already initialized", -1);
+        return;
+    }
     buffer_init(&buffer, STACK_BUFFER_LEN, &objects,
                 STACK_OBJECTS_LEN, &current_free_object_idx);
     is_init = true;

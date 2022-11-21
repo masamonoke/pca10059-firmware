@@ -1,6 +1,6 @@
 #include "gpio_utils.h"
 #include "app_timer.h"
-#include "module/datastructures/queue.h"
+#include "module/data_structures/queue.h"
 
 static instance_t* _s_queue;
 

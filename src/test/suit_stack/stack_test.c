@@ -1,5 +1,5 @@
 #include "dependency/unity/unity_fixture.h"
-#include "module/datastructures/stack.h"
+#include "module/data_structures/stack.h"
 
 TEST_GROUP(Stack);
 
