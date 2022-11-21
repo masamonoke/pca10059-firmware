@@ -124,7 +124,7 @@ void button_init() {
     double_click_handler_func_ = NULL;
     press_handler_func_ = NULL;
     release_handler_func_ = NULL;
-    //initially button is in defiend state that is not pressed
+    //initially button is in defined state that is not pressed
     _s_is_defined_button_state = true;
 }
 
