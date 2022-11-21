@@ -4,7 +4,7 @@ OUTPUT_DIRECTORY := _build
 DFU_PORT         ?= /dev/ttyACM0
 DFU_PACKAGE      := $(OUTPUT_DIRECTORY)/nrf52840_xxaa.dfu
 
-SDK_ROOT ?= /media/psf/HP-P500/nordic/esl-nsdk-master
+SDK_ROOT ?= /media/psf/HP-P500/nordic/esl-nsdk
 PROJ_DIR ?= ../src
 
 PREF_DEP = ../dependency
