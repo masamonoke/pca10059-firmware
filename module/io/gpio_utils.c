@@ -2,7 +2,7 @@
 #include "app_timer.h"
 #include "module/datastructures/queue.h"
 
-static queue_instance_t* _s_queue;
+static instance_t* _s_queue;
 
 #define PAUSE_TIME_MS 500
 #define DEBOUNCE_TIME 10
@@ -60,7 +60,7 @@ void gpio_utils_pause(void) {
 APP_TIMER_DEF(blink_async_timer_id_);
 
 void blink_async_handler(void* p_context) {
-    uint16_t led_id = queue_poll(_s_queue);
+    uint16_t led_id = queue_ctx_instance_poll(_s_queue);
     gpio_utils_led_invert(led_id);
 }
 
@@ -83,10 +83,10 @@ void gpio_utils_init(void) {
     nrf_gpio_cfg_input(BUTTON, NRF_GPIO_PIN_PULLUP);
 
     _s_timer_init();
-    _s_queue = queue_alloc(QUEUE_SIZE);
+    _s_queue = queue_ctx_alloc_instance(QUEUE_SIZE);
 }
 
 void gpio_utils_blink_async(uint32_t led_id, uint16_t delay_ms) {
-    queue_push(_s_queue, led_id);
+    queue_ctx_instance_push(_s_queue, led_id);
     app_timer_start(blink_async_timer_id_, APP_TIMER_TICKS(delay_ms), NULL);
 }
