@@ -30,6 +30,12 @@
 #ifndef APP_CONFIG_H
 #define APP_CONFIG_H
 
+#ifndef NRFX_NVMC_ENABLED
+#define NRFX_NVMC_ENABLED 1
+#endif
+
+#define NRF_DFU_APP_DATA_AREA_SIZE 0x00003000
+
 //==========================================================
 // <e> GPIOTE_ENABLED - nrf_drv_gpiote - GPIOTE peripheral driver - legacy layer
 //==========================================================

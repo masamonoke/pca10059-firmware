@@ -9,39 +9,39 @@ typedef struct {
     int err_code;
 } error_t;
 
-static uint8_t id_counter;
-static bool is_stack_init = false;
-static instance_t* stack;
+static uint8_t s_id_counter_;
+static bool s_is_stack_init_ = false;
+static instance_t* s_stack_;
 #define ERRORS_LEN 255
 static error_t* s_errors_;
 static bool s_is_any_errors = false;
 
 void runtime_error_init(void) {
-    stack = stack_ctx_alloc_instance(100);
+    s_stack_ = stack_ctx_alloc_instance(100);
     s_errors_ = malloc(sizeof(error_t) * ERRORS_LEN);
-    is_stack_init = true;
+    s_is_stack_init_ = true;
 }
 
 void runtime_error(const char* m, int p) {
-    if (!is_stack_init) {
+    if (!s_is_stack_init_) {
         runtime_error_init();
     }
 
     error_t e = {
-            .id = id_counter,
+            .id = s_id_counter_,
             .message = m,
             .err_code = p
     };
-    s_errors_[id_counter] = e;
-    id_counter++;
-    stack_ctx_instance_push(stack, e.id);
+    s_errors_[s_id_counter_] = e;
+    s_id_counter_++;
+    stack_ctx_instance_push(s_stack_, e.id);
     s_is_any_errors = true;
 }
 
 void runtime_error_stacktrace(void) {
     uint8_t id;
-    while (!stack_ctx_instance_is_empty(stack)) {
-        id = stack_ctx_instance_pop(stack);
+    while (!stack_ctx_instance_is_empty(s_stack_)) {
+        id = stack_ctx_instance_pop(s_stack_);
         NRF_LOG_INFO("%s\n", s_errors_[id].message);
     }
 }
