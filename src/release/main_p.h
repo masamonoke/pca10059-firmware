@@ -105,7 +105,7 @@ void release_handler(void) {
     s_is_changing_color_ = false;
 }
 
-void _s_define_status_led_behavior(void) {
+void s_define_status_led_behavior_(void) {
     switch (s_current_mode_) {
         case NO_INPUT_MODE:
             s_mode_led_behavior_ = s_mode_led_turn_off_;
@@ -126,7 +126,7 @@ void _s_define_status_led_behavior(void) {
 
 bool s_is_nvm_write_time_ = false;
 
-void double_click_handler() {
+void s_double_click_handler_() {
     if (s_current_mode_ == VALUE_MODIFY_MODE) {
         s_current_mode_ = NO_INPUT_MODE;
         //if double click happened on the last mode so all values set and can be written to nvm
@@ -134,7 +134,7 @@ void double_click_handler() {
     } else {
         s_current_mode_++;
     }
-    _s_define_status_led_behavior();
+    s_define_status_led_behavior_();
 }
 
 #endif /* SRC_RELEASE_MAIN_P */

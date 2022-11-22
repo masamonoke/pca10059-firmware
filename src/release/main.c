@@ -4,15 +4,13 @@
 #include "module/io/led/led_soft_pwm.h"
 #include "module/io/button.h"
 #include <math.h>
-#include "nrf_nvmc.h"
 #include "nrfx_nvmc.h"
 
 #include "main_p.h"
 
-#define PAGE_SIZE 0x00001000
 #define DATA_COUNT 3
 
-void write_hsv_to_nvm(uint32_t, uint32_t, uint32_t, uint32_t);
+bool write_hsv_to_nvm(uint32_t, uint32_t, uint32_t, uint32_t);
 
 int main(void) {
     app_timer_init();
@@ -26,7 +24,7 @@ int main(void) {
     button_init_press_check(press_handler);
     button_init_release_check(release_handler);
     button_set_n(2);
-    button_init_n_click_check(double_click_handler);
+    button_init_n_click_check(s_double_click_handler_);
 
     NRF_LOG_INFO("App start running");
 
@@ -36,22 +34,23 @@ int main(void) {
     s_mode_led_behavior_ = s_mode_led_turn_off_;
 
     uint32_t app_data_start_addr = BOOTLOADER_ADDRESS - NRF_DFU_APP_DATA_AREA_SIZE;
-    uint32_t* h_data = (uint32_t*) app_data_start_addr;
-    uint32_t* s_data = (uint32_t*) (app_data_start_addr + 0x00001000);
-    uint32_t* v_data = (uint32_t*) (app_data_start_addr + 0x00002000);
+    uint32_t* p_addr = (uint32_t*) app_data_start_addr;
+    uint32_t h_data = *(p_addr + 0);
+    uint32_t s_data = *(p_addr + 1);
+    uint32_t v_data = *(p_addr + 2);
 
     uint16_t initial_hue;
     uint16_t initial_satur;
     uint16_t initial_value;
 
-    if (*h_data == -1 || *s_data == -1 || *v_data == -1) {
+    if (h_data == -1 || s_data == -1 || v_data == -1) {
         initial_hue = (uint16_t) ceilf(360.f * LAST_ID_DIGITS / 100.f);
         initial_satur = 100;
         initial_value = 100;
     } else {
-        initial_hue = (uint16_t) *h_data;
-        initial_satur = (uint16_t) *s_data;
-        initial_value = (uint16_t) *v_data;
+        initial_hue = (uint16_t) h_data;
+        initial_satur = (uint16_t) s_data;
+        initial_value = (uint16_t) v_data;
     }
 
     s_hsv_data_ = converter_get_hsv_data(initial_hue, initial_satur, initial_value);
@@ -67,30 +66,25 @@ int main(void) {
         s_mode_led_behavior_();
 
         if (s_is_nvm_write_time_) {
-            write_hsv_to_nvm(app_data_start_addr, (uint32_t) s_hsv_data_.hue, (uint32_t) s_hsv_data_.saturation,
-                 (uint32_t) s_hsv_data_.value);
+            bool is_data_written = write_hsv_to_nvm(app_data_start_addr, (uint32_t) s_hsv_data_.hue,
+                (uint32_t) s_hsv_data_.saturation, (uint32_t) s_hsv_data_.value);
             s_is_nvm_write_time_ = false;
-            NRF_LOG_INFO("Values have been written to NVM");
-            NRF_LOG_INFO("%d %d %d", *h_data, *s_data, *v_data);
+            if (is_data_written) {
+                NRF_LOG_INFO("HSV data has written to NVM");
+                NRF_LOG_INFO("%d %d %d", s_hsv_data_.hue, s_hsv_data_.saturation, s_hsv_data_.value);
+            } else {
+                NRF_LOG_INFO("Data write has failed");
+            }
         }
-
 
         LOG_BACKEND_USB_PROCESS();
         NRF_LOG_PROCESS();
     }
 }
 
-void write_hsv_to_nvm(uint32_t start_addr, uint32_t h, uint32_t s, uint32_t v) {
-    uint32_t addr = start_addr;
+bool write_hsv_to_nvm(uint32_t start_addr, uint32_t h, uint32_t s, uint32_t v) {
     uint32_t values[] = { h, s, v };
-    for (uint32_t page = 0; page < DATA_COUNT; page++) {
-        addr = start_addr + PAGE_SIZE * page;
-        nrf_nvmc_page_erase(addr);
-        if (nrfx_nvmc_word_writable_check(addr, values[page])) {
-            nrf_nvmc_write_word(addr, values[page]);
-            if (nrfx_nvmc_write_done_check()) {
-                NRF_LOG_INFO("Value is saved");
-            }
-        }
-    }
+    nrf_nvmc_page_erase(start_addr);
+    nrf_nvmc_write_words(start_addr, values, DATA_COUNT);
+    return nrfx_nvmc_write_done_check();
 }
