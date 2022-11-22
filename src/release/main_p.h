@@ -1,9 +1,6 @@
 #ifndef SRC_RELEASE_MAIN_P
 #define SRC_RELEASE_MAIN_P
 
-#ifndef SRC_DEBUG_MAIN_P
-#define SRC_DEBUG_MAIN_P
-
 #define MODE_COUNT 4
 #define MODE_DENOTING_LED LED_YELLOW
 #define FAST_DELAY 200
@@ -16,29 +13,29 @@ enum {
     VALUE_MODIFY_MODE
 };
 
-static uint8_t _s_current_mode;
+static uint8_t s_current_mode_;
 
-static void(* _s_mode_led_behavior)(void);
+static void(* s_mode_led_behavior_)(void);
 
-static void _s_mode_led_turn_off(void) {
+static void s_mode_led_turn_off_(void) {
     gpio_utils_turn_off_led(MODE_DENOTING_LED);
 }
 static void _s_mode_led_turn_on(void) {
     gpio_utils_turn_on_led(MODE_DENOTING_LED);
 }
-static void _s_mode_led_blink_fast(void) {
+static void s_mode_led_blink_fast_(void) {
     gpio_utils_blink_async(MODE_DENOTING_LED, FAST_DELAY);
 }
 
-static void _s_mode_led_pwm_blink(void) {
+static void s_mode_led_pwm_blink_(void) {
     led_soft_pwm_blink(MODE_DENOTING_LED);
 }
 
-static bool _s_is_changing_color;
-static hsv_t _s_hsv_data;
+static bool s_is_changing_color_;
+static hsv_t s_hsv_data_;
 
 //function for moving component value from 0 to limit and back from limit to zero with step=1
-static float _s_inc_component(float component, uint16_t high_limit, bool* is_rising) {
+static float s_inc_component_(float component, uint16_t high_limit, bool* is_rising) {
     if (*is_rising) {
         component++;
         if (component >= high_limit) {
@@ -55,8 +52,8 @@ static float _s_inc_component(float component, uint16_t high_limit, bool* is_ris
     return component;
 }
 
-static void _s_increment_hsv_data(void) {
-    if (_s_current_mode == NO_INPUT_MODE) {
+static void s_increment_hsv_data_(void) {
+    if (s_current_mode_ == NO_INPUT_MODE) {
         return;
     }
 
@@ -64,83 +61,80 @@ static void _s_increment_hsv_data(void) {
     static bool is_rising_s = true;
     static bool is_rising_v = true;
 
-    if (_s_current_mode == HUE_MODIFY_MODE) {
+    if (s_current_mode_ == HUE_MODIFY_MODE) {
         //moving around circle in one direction i.e. when passing 360 cycle starts from 0 not moving back
         if (is_rising_h) {
-            _s_hsv_data.hue++;
-            if (_s_hsv_data.hue >= 360) {
+            s_hsv_data_.hue++;
+            if (s_hsv_data_.hue >= 360) {
                 is_rising_h = true;
-                _s_hsv_data.hue = 0;
+                s_hsv_data_.hue = 0;
             }
         } else {
-            _s_hsv_data.hue--;
-            if (_s_hsv_data.hue <= 0) {
+            s_hsv_data_.hue--;
+            if (s_hsv_data_.hue <= 0) {
                 is_rising_h = false;
-                _s_hsv_data.hue = 360;
+                s_hsv_data_.hue = 360;
             }
         }
-    } else if (_s_current_mode == SATUR_MODIFY_MODE) {
-        _s_hsv_data.saturation = _s_inc_component(_s_hsv_data.saturation, 100, &is_rising_s);
-    } else if (_s_current_mode == VALUE_MODIFY_MODE) {
-        _s_hsv_data.value = _s_inc_component(_s_hsv_data.value, 100, &is_rising_v);
+    } else if (s_current_mode_ == SATUR_MODIFY_MODE) {
+        s_hsv_data_.saturation = s_inc_component_(s_hsv_data_.saturation, 100, &is_rising_s);
+    } else if (s_current_mode_ == VALUE_MODIFY_MODE) {
+        s_hsv_data_.value = s_inc_component_(s_hsv_data_.value, 100, &is_rising_v);
     }
 
-    nordic_rgb_pwm_set_hsv_color(_s_hsv_data.hue, _s_hsv_data.saturation, _s_hsv_data.value);
+    nordic_rgb_pwm_set_hsv_color(s_hsv_data_.hue, s_hsv_data_.saturation, s_hsv_data_.value);
 }
 
 APP_TIMER_DEF(hsv_change_timer_id);
 
-static void _s_change_hsv_handler(void* p_context) {
-    _s_increment_hsv_data();
+static void s_change_hsv_handler_(void* p_context) {
+    s_increment_hsv_data_();
 }
 
-static void _s_timer_init(void) {
+static void s_timer_init_(void) {
     ret_code_t err_code;
-    err_code = app_timer_create(&hsv_change_timer_id, APP_TIMER_MODE_SINGLE_SHOT, _s_change_hsv_handler);
+    err_code = app_timer_create(&hsv_change_timer_id, APP_TIMER_MODE_SINGLE_SHOT, s_change_hsv_handler_);
     APP_ERROR_CHECK(err_code);
 }
 
 void press_handler(void) {
-    _s_is_changing_color = true;
+    s_is_changing_color_ = true;
 }
 
 void release_handler(void) {
-    _s_is_changing_color = false;
+    s_is_changing_color_ = false;
 }
 
 void _s_define_status_led_behavior(void) {
-    switch (_s_current_mode) {
+    switch (s_current_mode_) {
         case NO_INPUT_MODE:
-            _s_mode_led_behavior = _s_mode_led_turn_off;
+            s_mode_led_behavior_ = s_mode_led_turn_off_;
             break;
         case HUE_MODIFY_MODE:
-            _s_mode_led_behavior = _s_mode_led_pwm_blink;
+            s_mode_led_behavior_ = s_mode_led_pwm_blink_;
             break;
         case SATUR_MODIFY_MODE:
-            _s_mode_led_behavior = _s_mode_led_blink_fast;
+            s_mode_led_behavior_ = s_mode_led_blink_fast_;
             break;
         case VALUE_MODIFY_MODE:
-            _s_mode_led_behavior = _s_mode_led_turn_on;
+            s_mode_led_behavior_ = _s_mode_led_turn_on;
             break;
         default:
             break;
     }
 }
 
-bool s_is_nvm_write_time = false;
+bool s_is_nvm_write_time_ = false;
 
 void double_click_handler() {
-    if (_s_current_mode == VALUE_MODIFY_MODE) {
-        _s_current_mode = NO_INPUT_MODE;
+    if (s_current_mode_ == VALUE_MODIFY_MODE) {
+        s_current_mode_ = NO_INPUT_MODE;
         //if double click happened on the last mode so all values set and can be written to nvm
-        s_is_nvm_write_time = true;
+        s_is_nvm_write_time_ = true;
     } else {
-        _s_current_mode++;
+        s_current_mode_++;
     }
     _s_define_status_led_behavior();
 }
-
-#endif /* SRC_DEBUG_MAIN_P */
-
 
 #endif /* SRC_RELEASE_MAIN_P */
