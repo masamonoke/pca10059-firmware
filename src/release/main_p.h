@@ -105,7 +105,7 @@ void release_handler(void) {
     s_is_changing_color_ = false;
 }
 
-void _s_define_status_led_behavior(void) {
+void s_define_status_led_behavior_(void) {
     switch (s_current_mode_) {
         case NO_INPUT_MODE:
             s_mode_led_behavior_ = s_mode_led_turn_off_;
@@ -134,7 +134,25 @@ void double_click_handler() {
     } else {
         s_current_mode_++;
     }
-    _s_define_status_led_behavior();
+    s_define_status_led_behavior_();
 }
 
+static void init(void) {
+    app_timer_init();
+    nordic_usb_logging_init();
+    gpio_utils_init();
+    nrfx_pwm_t pwm_instance = NRFX_PWM_INSTANCE(0);
+    nordic_rgb_pwm_utils_init(pwm_instance);
+    button_init();
+    led_soft_pwm_init();
+
+    button_init_press_check(press_handler);
+    button_init_release_check(release_handler);
+    button_set_n(2);
+    button_init_n_click_check(double_click_handler);
+
+    NRF_LOG_INFO("App start running");
+
+    s_timer_init_();
+} 
 #endif /* SRC_RELEASE_MAIN_P */
