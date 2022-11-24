@@ -1,6 +1,8 @@
 #include "gpio_utils.h"
 #include "app_timer.h"
 #include "module/data_structures/queue.h"
+#include "nrf_log.h"
+#include "module/error/runtime_error.h"
 
 static instance_t* s_queue_;
 
@@ -8,6 +10,60 @@ static instance_t* s_queue_;
 #define DEBOUNCE_TIME 10
 #define LED_COUNT 4
 #define QUEUE_SIZE 100
+
+enum state_t {
+    LED_ON,
+    LED_OFF
+};
+
+typedef struct {
+    uint32_t led_id;
+    enum state_t state;
+} s_led_object_t_;
+
+static s_led_object_t_ s_led_data_objects_[4] = {
+        { .led_id = LED_RED, .state = LED_OFF },
+        { .led_id = LED_GREEN, .state = LED_OFF },
+        { .led_id = LED_BLUE, .state = LED_OFF },
+        { .led_id = LED_YELLOW, .state = LED_OFF },
+};
+
+static s_led_object_t_* s_get_obj_by_led_id_(uint32_t led_id) {
+
+    switch (led_id) {
+        case LED_RED:
+            return &s_led_data_objects_[0];
+            break;
+        case LED_GREEN:
+            return &s_led_data_objects_[1];
+            break;
+        case LED_BLUE:
+            return &s_led_data_objects_[2];
+            break;
+        case LED_YELLOW:
+            return &s_led_data_objects_[3];
+            break;
+    }
+    return NULL;
+}
+
+static void s_transition_ (uint32_t led_id) {
+    s_led_object_t_* obj = s_get_obj_by_led_id_(led_id);
+    if (obj == NULL) {
+        RUNTIME_ERROR("Wrong LED id passed", led_id);
+        return;
+    }
+    if (obj->state == LED_OFF) {
+        obj->state = LED_ON;
+        gpio_utils_turn_on_led(obj->led_id);
+        NRF_LOG_INFO("Turned on LED: %d", led_id);
+    } else {
+        obj->state = LED_OFF;
+        gpio_utils_turn_off_led(obj->led_id);
+        NRF_LOG_INFO("Turned off LED: %d", led_id);
+    }
+}
+
 
 void gpio_utils_turn_on_led(uint32_t led_id) {
     nrf_gpio_pin_write(led_id, 0);
@@ -57,17 +113,45 @@ void gpio_utils_pause(void) {
     nrf_delay_ms(PAUSE_TIME_MS);
 }
 
-APP_TIMER_DEF(blink_async_timer_id_);
+APP_TIMER_DEF(green_async_blink_timer_id_);
+APP_TIMER_DEF(yellow_async_blink_timer_id_);
+APP_TIMER_DEF(red_async_blink_timer_id_);
+APP_TIMER_DEF(blue_async_blink_timer_id_);
 
-void blink_async_handler(void* p_context) {
-    uint16_t led_id = queue_ctx_instance_poll(s_queue_);
-    gpio_utils_led_invert(led_id);
+static void s_handle_(void* p_context) {
+    uint32_t led_id = *((uint32_t*) p_context);
+    s_transition_(led_id);
+}
+
+void s_green_blink_async_handler_(void* p_context) {
+    s_handle_(p_context);
+}
+
+void s_yellow_blink_async_handler_(void* p_context) {
+    s_handle_(p_context);
+}
+
+void s_blue_blink_async_handler_(void* p_context) {
+    s_handle_(p_context);
+}
+
+void s_red_blink_async_handler_(void* p_context) {
+    s_handle_(p_context);
 }
 
 static void s_timer_init_() {
     ret_code_t err_code;
 
-    err_code = app_timer_create(&blink_async_timer_id_, APP_TIMER_MODE_SINGLE_SHOT, blink_async_handler);
+    err_code = app_timer_create(&green_async_blink_timer_id_, APP_TIMER_MODE_SINGLE_SHOT, s_green_blink_async_handler_);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = app_timer_create(&yellow_async_blink_timer_id_, APP_TIMER_MODE_SINGLE_SHOT, s_yellow_blink_async_handler_);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = app_timer_create(&red_async_blink_timer_id_, APP_TIMER_MODE_SINGLE_SHOT, s_red_blink_async_handler_);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = app_timer_create(&blue_async_blink_timer_id_, APP_TIMER_MODE_SINGLE_SHOT, s_blue_blink_async_handler_);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -86,7 +170,28 @@ void gpio_utils_init(void) {
     s_queue_ = queue_ctx_alloc_instance(QUEUE_SIZE);
 }
 
+static uint32_t s_context_green_led_;
+static uint32_t s_context_yellow_led_;
+static uint32_t s_context_red_led_;
+static uint32_t s_context_blue_led_;
+
 void gpio_utils_blink_async(uint32_t led_id, uint16_t delay_ms) {
-    queue_ctx_instance_push(s_queue_, led_id);
-    app_timer_start(blink_async_timer_id_, APP_TIMER_TICKS(delay_ms), NULL);
+    switch (led_id) {
+        case LED_YELLOW:
+            s_context_yellow_led_ = led_id;
+            app_timer_start(yellow_async_blink_timer_id_, APP_TIMER_TICKS(delay_ms), &s_context_yellow_led_);
+            break;
+        case LED_GREEN:
+            s_context_green_led_ = led_id;
+            app_timer_start(green_async_blink_timer_id_, APP_TIMER_TICKS(delay_ms), &s_context_green_led_);
+            break;
+        case LED_BLUE:
+            s_context_blue_led_ = led_id;
+            app_timer_start(blue_async_blink_timer_id_, APP_TIMER_TICKS(delay_ms), &s_context_blue_led_);
+            break;
+        case LED_RED:
+            s_context_red_led_ = led_id;
+            app_timer_start(red_async_blink_timer_id_, APP_TIMER_TICKS(delay_ms), &s_context_red_led_);
+            break;
+    }
 }
