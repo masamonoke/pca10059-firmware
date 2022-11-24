@@ -1,15 +1,11 @@
 #include "gpio_utils.h"
 #include "app_timer.h"
-#include "module/data_structures/queue.h"
 #include "nrf_log.h"
 #include "module/error/runtime_error.h"
-
-static instance_t* s_queue_;
 
 #define PAUSE_TIME_MS 500
 #define DEBOUNCE_TIME 10
 #define LED_COUNT 4
-#define QUEUE_SIZE 100
 
 enum state_t {
     LED_ON,
@@ -167,7 +163,6 @@ void gpio_utils_init(void) {
     nrf_gpio_cfg_input(BUTTON, NRF_GPIO_PIN_PULLUP);
 
     s_timer_init_();
-    s_queue_ = queue_ctx_alloc_instance(QUEUE_SIZE);
 }
 
 static uint32_t s_context_green_led_;
