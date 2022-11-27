@@ -21,11 +21,6 @@
 
 #include "module/io/gpio_utils.h"
 
-void nordic_usb_logging_init(void) {
-    ret_code_t ret = NRF_LOG_INIT(NULL);
-    APP_ERROR_CHECK(ret);
-
-    NRF_LOG_DEFAULT_BACKENDS_INIT();
-}
+void nordic_usb_logging_init(void);
 
 #endif /* MODULE_LOG_NORDIC_USB_LOGGING */

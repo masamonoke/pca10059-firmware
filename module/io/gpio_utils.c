@@ -151,6 +151,7 @@ static void s_timer_init_() {
     APP_ERROR_CHECK(err_code);
 }
 
+//TODO: add init flag and func to check is module init
 void gpio_utils_init(void) {
     nrf_gpio_cfg_output(LED_YELLOW);
     nrf_gpio_cfg_output(LED_BLUE);

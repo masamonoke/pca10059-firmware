@@ -114,9 +114,14 @@ void pwm_init(void) {
     gpio_utils_init();
 }
 
+static bool s_is_init_ = false;
+
 void nordic_rgb_pwm_utils_init(nrfx_pwm_t pwm_instance) {
-    s_pwm_instance_ = pwm_instance;
-    pwm_init();
+    if (!s_is_init_) {
+        s_pwm_instance_ = pwm_instance;
+        pwm_init();
+        s_is_init_ = true; 
+    }
 }
 
 void nordic_rgb_pwm_update_duty_cycle(uint8_t duty_red, uint8_t duty_green, uint8_t duty_blue) {
