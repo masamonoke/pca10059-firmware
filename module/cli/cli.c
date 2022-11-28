@@ -40,7 +40,7 @@ bool cli_is_there_message(void) {
     return s_is_message_;
 }
 
-static void cli_functions_undefined_command(void) {
+static void s_cli_functions_undefined_command_(void) {
     cli_set_message("Undefined command\r\n\n", 20);
     NRF_LOG_INFO("Undefined command");
 }
@@ -169,10 +169,10 @@ static void s_prepare_hsv_message_(uint32_t h, uint32_t s, uint32_t v) {
     s_is_message_ = true;
 }
 
-static bool cli_functions_rgb_proceed(const char* input, uint8_t i) {
+static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx) {
     uint16_t args[3];
-    if (!s_get_args_(input, i, args)) {
-        cli_functions_undefined_command();
+    if (!s_get_args_(input, args_start_idx, args)) {
+        s_cli_functions_undefined_command_();
         return false;
     }
     args[0] = math_utils_clamp_int(args[0], 255, 0);
@@ -185,13 +185,14 @@ static bool cli_functions_rgb_proceed(const char* input, uint8_t i) {
 
     s_prepare_rgb_message_(r, g, b);
     NRF_LOG_INFO("Color set to R=%d G=%d B=%d", r, g, b);
+
     return true;
 }
 
-static bool cli_functions_hsv_proceed(const char* input, uint8_t i) {
+static bool cli_functions_hsv_proceed(const char* input, uint8_t args_start_idx) {
     uint16_t args[3];
-    if (!s_get_args_(input, i, args)) {
-        cli_functions_undefined_command();
+    if (!s_get_args_(input, args_start_idx, args)) {
+        s_cli_functions_undefined_command_();
         return false;
     }
 
@@ -209,11 +210,9 @@ static bool cli_functions_hsv_proceed(const char* input, uint8_t i) {
     return true;
 }
 
-static void cli_functions_help_proceed(const char* input, uint8_t i) {
-    uint16_t args[3];
-    s_get_args_(input, i, args);
-    if (args[0] != 0) {
-        cli_functions_undefined_command();
+static void cli_functions_help_proceed(const char* input, uint8_t args_start_idx) {
+    if (input[args_start_idx] != '\0') {
+        s_cli_functions_undefined_command_();
         return;
     }
     s_prepare_help_message_();
@@ -228,23 +227,18 @@ void cli_proceed(char* input) {
         i++;
     }
     if (i == 0) {
-        cli_functions_undefined_command();
+        s_cli_functions_undefined_command_();
         return;
     }
     command[i] = '\0';
     string_utils_to_lower_case(command);
     if (string_utils_compare_string(command, "rgb")) {
-        if (!cli_functions_rgb_proceed(input, i)) {
-            return;
-        }
+        cli_functions_rgb_proceed(input, i);
     } else if (string_utils_compare_string(command, "hsv")) {
-        if (!cli_functions_hsv_proceed(input, i)) {
-            return;
-        }
+        cli_functions_hsv_proceed(input, i);
     } else if (string_utils_compare_string(command, "help")) {
         cli_functions_help_proceed(input, i);
     } else {
-        cli_functions_undefined_command();
-        return;
+        s_cli_functions_undefined_command_();
     }
 }
