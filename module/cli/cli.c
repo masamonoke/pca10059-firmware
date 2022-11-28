@@ -4,15 +4,13 @@
 #include "nrf_log.h"
 #include "module/utils/math_utils.h"
 
-//TODO: bug when type 00 instead of 0
-//TODO: bug when type help and then rgb 20 123 134 for example and FATAL: read zero bytes from port after that
-
-static char s_message_[150];
+#define MESSAGE_SIZE 150
+static char s_message_[MESSAGE_SIZE];
 static uint16_t s_len_;
 static bool s_is_message_ = false;
 
 static void s_clear_message_(void) {
-    for (size_t i = 0; i < 100; i++) {
+    for (size_t i = 0; i < MESSAGE_SIZE; i++) {
         s_message_[i] = '\0';
     }
 }
@@ -43,7 +41,7 @@ bool cli_is_there_message(void) {
 }
 
 static void cli_functions_undefined_command(void) {
-    cli_set_message("\r\nUndefined command\r\n\n", 22);
+    cli_set_message("Undefined command\r\n\n", 20);
     NRF_LOG_INFO("Undefined command");
 }
 
@@ -54,20 +52,13 @@ static bool s_get_args_(const char* input, uint16_t start_idx, uint16_t* args) {
 }
 
 static void s_prepare_help_message_(void) {
-    char str[] = "RGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp\r\n";
-    cli_set_message(str, 64);
+    cli_set_message("RGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp\r\n", 64);
 }
 
-static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
-    s_clear_message_();
-    char s[17] = "\r\nColor set to R=";
-    for (size_t i = 0; i < 15; i++) {
-        s_message_[i] = s[i];
-    }
+static uint8_t s_get_num_len_(uint16_t num) {
     uint8_t len;
-    char num[3];
-    if (r / 100 == 0) {
-        if (r / 10 == 0) {
+    if (num / 100 == 0) {
+        if (num / 10 == 0) {
             len = 1;
         } else {
             len = 2;
@@ -75,45 +66,44 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
     } else {
         len = 3;
     }
+    return len;
+}
+
+static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
+    s_clear_message_();
+    char s[13] = "Color set to ";
+    uint8_t start_message_len = 13;
+    for (size_t i = 0; i < start_message_len; i++) {
+        s_message_[i] = s[i];
+    }
+    uint8_t len;
+    len = s_get_num_len_(r);
+    char num[3];
     sprintf(num, "%ld", r);
-    uint8_t cur_idx = 15;
+    uint8_t cur_idx = start_message_len;
     s_message_[cur_idx++] = 'R';
     s_message_[cur_idx++] = '=';
     size_t k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
         s_message_[i] = num[k];
     }
+
     cur_idx += len;
     s_message_[cur_idx++] = ' ';
     s_message_[cur_idx++] = 'G';
     s_message_[cur_idx++] = '=';
-    if (g / 100 == 0) {
-        if (g / 10 == 0) {
-            len = 1;
-        } else {
-            len = 2;
-        }
-    } else {
-        len = 3;
-    }
+    len = s_get_num_len_(g);
     sprintf(num, "%ld", g);
     k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
         s_message_[i] = num[k];
     }
+
     cur_idx += len;
     s_message_[cur_idx++] = ' ';
     s_message_[cur_idx++] = 'B';
     s_message_[cur_idx++] = '=';
-    if (b / 100 == 0) {
-        if (b / 10 == 0) {
-            len = 1;
-        } else {
-            len = 2;
-        }
-    } else {
-        len = 3;
-    }
+    len = s_get_num_len_(b);
     sprintf(num, "%ld", b);
     k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
@@ -123,68 +113,48 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
 
     s_message_[cur_idx++] = '\r';
     s_message_[cur_idx++] = '\n';
-    s_message_[cur_idx++] = '\n';
-    s_message_[cur_idx++] = '\0';
+    s_message_[cur_idx] = '\0';
+
     s_len_ = cur_idx;
     s_is_message_ = true;
 }
 
 static void s_prepare_hsv_message_(uint32_t h, uint32_t s, uint32_t v) {
     s_clear_message_();
-    char str[17] = "\r\nColor set to H=";
-    for (size_t i = 0; i < 15; i++) {
+    char str[13] = "Color set to ";
+    uint8_t start_message_len = 13;
+    for (size_t i = 0; i < start_message_len; i++) {
         s_message_[i] = str[i];
     }
+
     uint8_t len;
+    len = s_get_num_len_(h);
     char num[3];
-    if (h / 100 == 0) {
-        if (h / 10 == 0) {
-            len = 1;
-        } else {
-            len = 2;
-        }
-    } else {
-        len = 3;
-    }
     sprintf(num, "%ld", h);
-    uint8_t cur_idx = 15;
+    uint8_t cur_idx = start_message_len;
     s_message_[cur_idx++] = 'H';
     s_message_[cur_idx++] = '=';
     size_t k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
         s_message_[i] = num[k];
     }
+
     cur_idx += len;
     s_message_[cur_idx++] = ' ';
     s_message_[cur_idx++] = 'S';
     s_message_[cur_idx++] = '=';
-    if (s / 100 == 0) {
-        if (s / 10 == 0) {
-            len = 1;
-        } else {
-            len = 2;
-        }
-    } else {
-        len = 3;
-    }
+    len = s_get_num_len_(s);
     sprintf(num, "%ld", s);
     k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
         s_message_[i] = num[k];
     }
+
     cur_idx += len;
     s_message_[cur_idx++] = ' ';
     s_message_[cur_idx++] = 'V';
     s_message_[cur_idx++] = '=';
-    if (v / 100 == 0) {
-        if (v / 10 == 0) {
-            len = 1;
-        } else {
-            len = 2;
-        }
-    } else {
-        len = 3;
-    }
+    len = s_get_num_len_(v);
     sprintf(num, "%ld", v);
     k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
@@ -194,8 +164,7 @@ static void s_prepare_hsv_message_(uint32_t h, uint32_t s, uint32_t v) {
 
     s_message_[cur_idx++] = '\r';
     s_message_[cur_idx++] = '\n';
-    s_message_[cur_idx++] = '\n';
-    s_message_[cur_idx++] = '\0';
+    s_message_[cur_idx] = '\0';
     s_len_ = cur_idx;
     s_is_message_ = true;
 }

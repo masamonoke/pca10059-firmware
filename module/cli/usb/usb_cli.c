@@ -12,6 +12,9 @@
 #define CDC_ACM_DATA_EPIN       NRF_DRV_USBD_EPIN4
 #define CDC_ACM_DATA_EPOUT      NRF_DRV_USBD_EPOUT4
 
+#define BUFF_SIZE 40
+#define MESSAGE_SIZE 150
+
 static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_acm_user_event_t event);
 
 APP_USBD_CDC_ACM_GLOBAL_DEF(usb_cdc_acm,
@@ -41,7 +44,7 @@ void usb_cli_process(void) {
     }
 }
 
-static char buff[40];
+static char buff[BUFF_SIZE];
 static uint8_t i = 0;
 
 static void s_clean_buffer_(void) {
@@ -66,7 +69,7 @@ static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_ac
     }
     case APP_USBD_CDC_ACM_USER_EVT_TX_DONE: {
         if (cli_is_there_message()) {
-            char message[100];
+            char message[MESSAGE_SIZE];
             uint16_t len;
             cli_get_message(message, &len);
             app_usbd_cdc_acm_write(&usb_cdc_acm, message, len);
