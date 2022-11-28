@@ -5,7 +5,6 @@
 #include "module/utils/math_utils.h"
 
 //TODO: bug when type 00 instead of 0
-//TODO: bug when type help and then rgb 20 123 134 for example and FATAL: read zero bytes from port after that
 
 static char s_message_[150];
 static uint16_t s_len_;
@@ -43,7 +42,7 @@ bool cli_is_there_message(void) {
 }
 
 static void cli_functions_undefined_command(void) {
-    cli_set_message("\r\nUndefined command\r\n\n", 22);
+    cli_set_message("Undefined command\r\n\n", 20);
     NRF_LOG_INFO("Undefined command");
 }
 
@@ -54,14 +53,13 @@ static bool s_get_args_(const char* input, uint16_t start_idx, uint16_t* args) {
 }
 
 static void s_prepare_help_message_(void) {
-    char str[] = "RGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp\r\n";
-    cli_set_message(str, 64);
+    cli_set_message("RGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp\r\n\n", 65);
 }
 
 static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
     s_clear_message_();
-    char s[17] = "\r\nColor set to R=";
-    for (size_t i = 0; i < 15; i++) {
+    char s[13] = "Color set to ";
+    for (size_t i = 0; i < 13; i++) {
         s_message_[i] = s[i];
     }
     uint8_t len;
@@ -76,7 +74,7 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
         len = 3;
     }
     sprintf(num, "%ld", r);
-    uint8_t cur_idx = 15;
+    uint8_t cur_idx = 13;
     s_message_[cur_idx++] = 'R';
     s_message_[cur_idx++] = '=';
     size_t k = 0;
@@ -123,7 +121,6 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
 
     s_message_[cur_idx++] = '\r';
     s_message_[cur_idx++] = '\n';
-    s_message_[cur_idx++] = '\n';
     s_message_[cur_idx++] = '\0';
     s_len_ = cur_idx;
     s_is_message_ = true;
@@ -131,8 +128,8 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
 
 static void s_prepare_hsv_message_(uint32_t h, uint32_t s, uint32_t v) {
     s_clear_message_();
-    char str[17] = "\r\nColor set to H=";
-    for (size_t i = 0; i < 15; i++) {
+    char str[13] = "Color set to ";
+    for (size_t i = 0; i < 13; i++) {
         s_message_[i] = str[i];
     }
     uint8_t len;
@@ -147,7 +144,7 @@ static void s_prepare_hsv_message_(uint32_t h, uint32_t s, uint32_t v) {
         len = 3;
     }
     sprintf(num, "%ld", h);
-    uint8_t cur_idx = 15;
+    uint8_t cur_idx = 13;
     s_message_[cur_idx++] = 'H';
     s_message_[cur_idx++] = '=';
     size_t k = 0;
@@ -193,7 +190,6 @@ static void s_prepare_hsv_message_(uint32_t h, uint32_t s, uint32_t v) {
     cur_idx += len;
 
     s_message_[cur_idx++] = '\r';
-    s_message_[cur_idx++] = '\n';
     s_message_[cur_idx++] = '\n';
     s_message_[cur_idx++] = '\0';
     s_len_ = cur_idx;
