@@ -5,8 +5,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-//TODO: test
-
 bool string_utils_compare_string(const char* s1, const char*s2);
 
 bool string_utils_parse_string_get_nums(const char* s, uint16_t* a, uint8_t len);

@@ -41,14 +41,30 @@ bool cli_is_there_message(void) {
 }
 
 static void s_cli_functions_undefined_command_(void) {
-    cli_set_message("Undefined command\r\n\n", 20);
+    cli_set_message("Undefined command\r\n", 19);
     NRF_LOG_INFO("Undefined command");
 }
 
-static bool s_get_args_(const char* input, uint16_t start_idx, uint16_t* args) {
-    char s[12];
+#define MAX_ARGS_STR_LEN 30
+static bool s_get_args_(const char* input, uint16_t start_idx, uint16_t* args, uint16_t args_count) {
+    char s[MAX_ARGS_STR_LEN];
     string_utils_substring_to_end(input, start_idx + 1, s);
-    return string_utils_parse_string_get_nums(s, args, 3);
+    size_t k = 0;
+    uint8_t space_counts = 0;
+    while (s[k] != '\0') {
+        //TODO: fix space bug
+        //workaround of e.g. rgb 123 123 123 there is space at the end but rgb 123 5 123 there isn't
+        if (s[k] == ' ' && s[k + 1] != '\0') {
+            space_counts++;
+        }
+        k++;
+    }
+    NRF_LOG_INFO("%d", space_counts);
+    if (space_counts + 1 != args_count) {
+        return false;
+    }
+    bool res = string_utils_parse_string_get_nums(s, args, 3);
+    return res;
 }
 
 static void s_prepare_help_message_(void) {
@@ -56,32 +72,27 @@ static void s_prepare_help_message_(void) {
 }
 
 static uint8_t s_get_num_len_(uint16_t num) {
-    uint8_t len;
-    if (num / 100 == 0) {
-        if (num / 10 == 0) {
-            len = 1;
-        } else {
-            len = 2;
-        }
-    } else {
-        len = 3;
+    uint8_t len = 0;
+    while (num != 0) {
+        num /= 10;
+        len++;
     }
     return len;
 }
 
-static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
+#define MAX_DIGITS 5
+static void s_prepare_3_value_message_(const uint32_t val1, const uint32_t val2, const uint32_t val3,
+         const char* start_of_message, const uint16_t mes_len, const char* chars) {
     s_clear_message_();
-    char s[13] = "Color set to ";
-    uint8_t start_message_len = 13;
-    for (size_t i = 0; i < start_message_len; i++) {
-        s_message_[i] = s[i];
+    for (size_t i = 0; i < mes_len; i++) {
+        s_message_[i] = start_of_message[i];
     }
     uint8_t len;
-    len = s_get_num_len_(r);
-    char num[3];
-    sprintf(num, "%ld", r);
-    uint8_t cur_idx = start_message_len;
-    s_message_[cur_idx++] = 'R';
+    len = s_get_num_len_(val1);
+    char num[MAX_DIGITS];
+    sprintf(num, "%ld", val1);
+    uint8_t cur_idx = mes_len;
+    s_message_[cur_idx++] = chars[0];
     s_message_[cur_idx++] = '=';
     size_t k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
@@ -90,10 +101,10 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
 
     cur_idx += len;
     s_message_[cur_idx++] = ' ';
-    s_message_[cur_idx++] = 'G';
+    s_message_[cur_idx++] = chars[1];
     s_message_[cur_idx++] = '=';
-    len = s_get_num_len_(g);
-    sprintf(num, "%ld", g);
+    len = s_get_num_len_(val2);
+    sprintf(num, "%ld", val2);
     k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
         s_message_[i] = num[k];
@@ -101,10 +112,10 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
 
     cur_idx += len;
     s_message_[cur_idx++] = ' ';
-    s_message_[cur_idx++] = 'B';
+    s_message_[cur_idx++] = chars[2];
     s_message_[cur_idx++] = '=';
-    len = s_get_num_len_(b);
-    sprintf(num, "%ld", b);
+    len = s_get_num_len_(val3);
+    sprintf(num, "%ld", val3);
     k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
         s_message_[i] = num[k];
@@ -119,59 +130,10 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
     s_is_message_ = true;
 }
 
-static void s_prepare_hsv_message_(uint32_t h, uint32_t s, uint32_t v) {
-    s_clear_message_();
-    char str[13] = "Color set to ";
-    uint8_t start_message_len = 13;
-    for (size_t i = 0; i < start_message_len; i++) {
-        s_message_[i] = str[i];
-    }
-
-    uint8_t len;
-    len = s_get_num_len_(h);
-    char num[3];
-    sprintf(num, "%ld", h);
-    uint8_t cur_idx = start_message_len;
-    s_message_[cur_idx++] = 'H';
-    s_message_[cur_idx++] = '=';
-    size_t k = 0;
-    for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
-        s_message_[i] = num[k];
-    }
-
-    cur_idx += len;
-    s_message_[cur_idx++] = ' ';
-    s_message_[cur_idx++] = 'S';
-    s_message_[cur_idx++] = '=';
-    len = s_get_num_len_(s);
-    sprintf(num, "%ld", s);
-    k = 0;
-    for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
-        s_message_[i] = num[k];
-    }
-
-    cur_idx += len;
-    s_message_[cur_idx++] = ' ';
-    s_message_[cur_idx++] = 'V';
-    s_message_[cur_idx++] = '=';
-    len = s_get_num_len_(v);
-    sprintf(num, "%ld", v);
-    k = 0;
-    for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
-        s_message_[i] = num[k];
-    }
-    cur_idx += len;
-
-    s_message_[cur_idx++] = '\r';
-    s_message_[cur_idx++] = '\n';
-    s_message_[cur_idx] = '\0';
-    s_len_ = cur_idx;
-    s_is_message_ = true;
-}
 
 static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx) {
     uint16_t args[3];
-    if (!s_get_args_(input, args_start_idx, args)) {
+    if (!s_get_args_(input, args_start_idx, args, 3)) {
         s_cli_functions_undefined_command_();
         return false;
     }
@@ -183,7 +145,8 @@ static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx)
     uint32_t b = args[2];
     nordic_rgb_pwm_set_color(r, g, b);
 
-    s_prepare_rgb_message_(r, g, b);
+    char chars[] = {'r', 'g', 'b'};
+    s_prepare_3_value_message_(r, g, b, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to R=%d G=%d B=%d", r, g, b);
 
     return true;
@@ -191,7 +154,7 @@ static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx)
 
 static bool cli_functions_hsv_proceed(const char* input, uint8_t args_start_idx) {
     uint16_t args[3];
-    if (!s_get_args_(input, args_start_idx, args)) {
+    if (!s_get_args_(input, args_start_idx, args, 3)) {
         s_cli_functions_undefined_command_();
         return false;
     }
@@ -205,8 +168,12 @@ static bool cli_functions_hsv_proceed(const char* input, uint8_t args_start_idx)
     uint8_t v = args[1];
 
     nordic_rgb_pwm_set_hsv_color(h, s, v);
-    s_prepare_hsv_message_(h, s, v);
+
+    
+    char chars[] = {'h', 's', 'v'};
+    s_prepare_3_value_message_(h, s, v, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to H=%d S=%d V=%d", h, s, v);
+
     return true;
 }
 
@@ -226,12 +193,14 @@ void cli_proceed(char* input) {
         command[i] = input[i];
         i++;
     }
+
     if (i == 0) {
-        s_cli_functions_undefined_command_();
         return;
     }
+
     command[i] = '\0';
     string_utils_to_lower_case(command);
+
     if (string_utils_compare_string(command, "rgb")) {
         cli_functions_rgb_proceed(input, i);
     } else if (string_utils_compare_string(command, "hsv")) {
