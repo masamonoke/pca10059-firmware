@@ -59,12 +59,12 @@ static bool s_get_args_(const char* input, uint16_t start_idx, uint16_t* args, u
         }
         k++;
     }
-    NRF_LOG_INFO("%d", space_counts);
+    
     if (space_counts + 1 != args_count) {
         return false;
     }
-    bool res = string_utils_parse_string_get_nums(s, args, 3);
-    return res;
+
+    return string_utils_parse_string_get_nums(s, args, 3);
 }
 
 static void s_prepare_help_message_(void) {
@@ -81,46 +81,31 @@ static uint8_t s_get_num_len_(uint16_t num) {
 }
 
 #define MAX_DIGITS 5
-static void s_prepare_3_value_message_(const uint32_t val1, const uint32_t val2, const uint32_t val3,
-         const char* start_of_message, const uint16_t mes_len, const char* chars) {
+static void s_prepare_message_(const uint16_t* vals, uint16_t vals_count,
+         const char* start_of_message, const uint16_t mes_len, char* chars) {
+
     s_clear_message_();
+
     for (size_t i = 0; i < mes_len; i++) {
         s_message_[i] = start_of_message[i];
     }
+
     uint8_t len;
-    len = s_get_num_len_(val1);
     char num[MAX_DIGITS];
-    sprintf(num, "%ld", val1);
     uint8_t cur_idx = mes_len;
-    s_message_[cur_idx++] = chars[0];
-    s_message_[cur_idx++] = '=';
-    size_t k = 0;
-    for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
-        s_message_[i] = num[k];
-    }
 
-    cur_idx += len;
-    s_message_[cur_idx++] = ' ';
-    s_message_[cur_idx++] = chars[1];
-    s_message_[cur_idx++] = '=';
-    len = s_get_num_len_(val2);
-    sprintf(num, "%ld", val2);
-    k = 0;
-    for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
-        s_message_[i] = num[k];
+    for (size_t z = 0; z < vals_count; z++) {
+        len = s_get_num_len_(vals[z]);
+        sprintf(num, "%u", vals[z]);
+        s_message_[cur_idx++] = chars[z];
+        s_message_[cur_idx++] = '=';
+        size_t k = 0;
+        for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
+            s_message_[i] = num[k];
+        }
+        cur_idx += len;
+        s_message_[cur_idx++] = ' ';
     }
-
-    cur_idx += len;
-    s_message_[cur_idx++] = ' ';
-    s_message_[cur_idx++] = chars[2];
-    s_message_[cur_idx++] = '=';
-    len = s_get_num_len_(val3);
-    sprintf(num, "%ld", val3);
-    k = 0;
-    for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
-        s_message_[i] = num[k];
-    }
-    cur_idx += len;
 
     s_message_[cur_idx++] = '\r';
     s_message_[cur_idx++] = '\n';
@@ -145,8 +130,9 @@ static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx)
     uint32_t b = args[2];
     nordic_rgb_pwm_set_color(r, g, b);
 
-    char chars[] = {'r', 'g', 'b'};
-    s_prepare_3_value_message_(r, g, b, "Color set to ", 13, chars);
+    char chars[] = "RGB";
+    uint16_t vals[] = { r, g, b };
+    s_prepare_message_(vals, 3, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to R=%d G=%d B=%d", r, g, b);
 
     return true;
@@ -170,8 +156,9 @@ static bool cli_functions_hsv_proceed(const char* input, uint8_t args_start_idx)
     nordic_rgb_pwm_set_hsv_color(h, s, v);
 
     
-    char chars[] = {'h', 's', 'v'};
-    s_prepare_3_value_message_(h, s, v, "Color set to ", 13, chars);
+    char chars[] = "HSV";
+    uint16_t vals[] = { h, s, v };
+    s_prepare_message_(vals, 3, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to H=%d S=%d V=%d", h, s, v);
 
     return true;

@@ -26,7 +26,7 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(usb_cdc_acm,
                             CDC_ACM_DATA_EPOUT,
                             APP_USBD_CDC_COMM_PROTOCOL_NONE);
 
-static char m_rx_buffer[READ_SIZE];
+static char s_rx_buffer_[READ_SIZE];
 static bool s_is_init_ = false;
 
 void usb_cli_init(app_usbd_cdc_acm_t instance) {
@@ -44,16 +44,14 @@ void usb_cli_process(void) {
     }
 }
 
-//TODO: rename static vars
-static char buff[BUFF_SIZE];
-//TODO: rename to cur_buf_idx
-static uint8_t i = 0;
+static char s_buff_[BUFF_SIZE];
+static uint8_t s_cur_buf_idx_ = 0;
 
 static void s_clean_buffer_(void) {
     for (size_t k = 0; k < 40; k++) {
-        buff[k] = '\0';
+        s_buff_[k] = '\0';
     }
-    i = 0;
+    s_cur_buf_idx_ = 0;
 }
 
 static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_acm_user_event_t event) {
@@ -61,7 +59,7 @@ static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_ac
     case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN: {
         ret_code_t ret;
         gpio_utils_turn_on_led(LED_YELLOW);
-        ret = app_usbd_cdc_acm_read(&usb_cdc_acm, m_rx_buffer, READ_SIZE);
+        ret = app_usbd_cdc_acm_read(&usb_cdc_acm, s_rx_buffer_, READ_SIZE);
         UNUSED_VARIABLE(ret);
         break;
     }
@@ -80,19 +78,19 @@ static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_ac
     }
     case APP_USBD_CDC_ACM_USER_EVT_RX_DONE: {
         ret_code_t ret;
-        buff[i] = m_rx_buffer[0];
-        i++;
+        s_buff_[s_cur_buf_idx_] = s_rx_buffer_[0];
+        s_cur_buf_idx_++;
         do {
-            if (m_rx_buffer[0] == '\r' || m_rx_buffer[0] == '\n') {
-                buff[i - 1] = '\0';
-                cli_proceed(buff);
+            if (s_rx_buffer_[0] == '\r' || s_rx_buffer_[0] == '\n') {
+                s_buff_[s_cur_buf_idx_ - 1] = '\0';
+                cli_proceed(s_buff_);
                 s_clean_buffer_();
                 ret = app_usbd_cdc_acm_write(&usb_cdc_acm, "\r\n", 2);
             } else {
-                ret = app_usbd_cdc_acm_write(&usb_cdc_acm, m_rx_buffer, READ_SIZE);
+                ret = app_usbd_cdc_acm_write(&usb_cdc_acm, s_rx_buffer_, READ_SIZE);
             }
 
-            ret = app_usbd_cdc_acm_read(&usb_cdc_acm, m_rx_buffer, READ_SIZE);
+            ret = app_usbd_cdc_acm_read(&usb_cdc_acm, s_rx_buffer_, READ_SIZE);
         } while (ret == NRF_SUCCESS);
 
         break;
