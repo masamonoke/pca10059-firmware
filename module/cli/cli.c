@@ -49,20 +49,6 @@ static void s_cli_functions_undefined_command_(void) {
 static bool s_get_args_(const char* input, uint16_t start_idx, uint16_t* args, uint16_t args_count) {
     char s[MAX_ARGS_STR_LEN];
     string_utils_substring_to_end(input, start_idx + 1, s);
-    size_t k = 0;
-    uint8_t space_counts = 0;
-    while (s[k] != '\0') {
-        //TODO: fix space bug
-        //workaround of e.g. rgb 123 123 123 there is space at the end but rgb 123 5 123 there isn't
-        if (s[k] == ' ' && s[k + 1] != '\0') {
-            space_counts++;
-        }
-        k++;
-    }
-    
-    if (space_counts + 1 != args_count) {
-        return false;
-    }
 
     return string_utils_parse_string_get_nums(s, args, 3);
 }
@@ -73,6 +59,9 @@ static void s_prepare_help_message_(void) {
 
 static uint8_t s_get_num_len_(uint16_t num) {
     uint8_t len = 0;
+    if (num == 0) {
+        return 1;
+    }
     while (num != 0) {
         num /= 10;
         len++;
@@ -94,13 +83,12 @@ static void s_prepare_message_(const uint16_t* vals, uint16_t vals_count,
     char num[MAX_DIGITS];
     uint8_t cur_idx = mes_len;
 
-    for (size_t z = 0; z < vals_count; z++) {
-        len = s_get_num_len_(vals[z]);
-        sprintf(num, "%u", vals[z]);
-        s_message_[cur_idx++] = chars[z];
+    for (size_t val_idx = 0; val_idx < vals_count; val_idx++) {
+        len = s_get_num_len_(vals[val_idx]);
+        sprintf(num, "%d", vals[val_idx]);
+        s_message_[cur_idx++] = chars[val_idx];
         s_message_[cur_idx++] = '=';
-        size_t k = 0;
-        for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
+        for (size_t i = cur_idx, k = 0; i < cur_idx + len; i++, k++) {
             s_message_[i] = num[k];
         }
         cur_idx += len;
@@ -119,7 +107,6 @@ static void s_prepare_message_(const uint16_t* vals, uint16_t vals_count,
 static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx) {
     uint16_t args[3];
     if (!s_get_args_(input, args_start_idx, args, 3)) {
-        s_cli_functions_undefined_command_();
         return false;
     }
     args[0] = math_utils_clamp_int(args[0], 255, 0);
@@ -141,7 +128,6 @@ static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx)
 static bool cli_functions_hsv_proceed(const char* input, uint8_t args_start_idx) {
     uint16_t args[3];
     if (!s_get_args_(input, args_start_idx, args, 3)) {
-        s_cli_functions_undefined_command_();
         return false;
     }
 
@@ -164,18 +150,55 @@ static bool cli_functions_hsv_proceed(const char* input, uint8_t args_start_idx)
     return true;
 }
 
-static void cli_functions_help_proceed(const char* input, uint8_t args_start_idx) {
+static bool cli_functions_help_proceed(const char* input, uint8_t args_start_idx) {
     if (input[args_start_idx] != '\0') {
-        s_cli_functions_undefined_command_();
-        return;
+        return false;
     }
+
     s_prepare_help_message_();
     NRF_LOG_INFO("\nRGB <red> <green> <blue>\nHSV <hur> <saturation> <value>\nhelp");
+
+    return true;
+}
+
+#define COMMAND_STR_LEN 10
+typedef struct {
+    char command[COMMAND_STR_LEN];
+    bool (* command_func)(const char*, uint8_t);
+} command_obj_t;
+
+#define COMMAND_LIST_LEN 3
+static command_obj_t s_commands_[] = {
+    {
+        .command = "rgb",
+        .command_func = cli_functions_rgb_proceed
+    },
+    {
+        .command = "hsv",
+        .command_func = cli_functions_hsv_proceed
+    },
+    {
+        .command = "help",
+        .command_func = cli_functions_help_proceed
+    }
+};
+
+static void s_define_command_(const char* command_str, const char* input, const size_t args_start_idx) {
+    for (uint16_t com_idx = 0; com_idx < COMMAND_LIST_LEN; com_idx++) {
+        if (string_utils_compare_string(s_commands_[com_idx].command, command_str)) {
+            if (!s_commands_[com_idx].command_func(input, args_start_idx)) {
+                break;
+            } else {
+                return;
+            }
+        }
+    }
+    s_cli_functions_undefined_command_();
 }
 
 void cli_proceed(char* input) {
     size_t i = 0;
-    char command[10];
+    char command[COMMAND_STR_LEN];
     while (input[i] != ' ' && input[i] != '\0') {
         command[i] = input[i];
         i++;
@@ -188,13 +211,5 @@ void cli_proceed(char* input) {
     command[i] = '\0';
     string_utils_to_lower_case(command);
 
-    if (string_utils_compare_string(command, "rgb")) {
-        cli_functions_rgb_proceed(input, i);
-    } else if (string_utils_compare_string(command, "hsv")) {
-        cli_functions_hsv_proceed(input, i);
-    } else if (string_utils_compare_string(command, "help")) {
-        cli_functions_help_proceed(input, i);
-    } else {
-        s_cli_functions_undefined_command_();
-    }
+    s_define_command_(command, input, i);
 }

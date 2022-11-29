@@ -48,7 +48,7 @@ static char s_buff_[BUFF_SIZE];
 static uint8_t s_cur_buf_idx_ = 0;
 
 static void s_clean_buffer_(void) {
-    for (size_t k = 0; k < 40; k++) {
+    for (size_t k = 0; k < BUFF_SIZE; k++) {
         s_buff_[k] = '\0';
     }
     s_cur_buf_idx_ = 0;
