@@ -44,7 +44,9 @@ void usb_cli_process(void) {
     }
 }
 
+//TODO: rename static vars
 static char buff[BUFF_SIZE];
+//TODO: rename to cur_buf_idx
 static uint8_t i = 0;
 
 static void s_clean_buffer_(void) {

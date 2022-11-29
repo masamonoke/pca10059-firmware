@@ -18,19 +18,24 @@ bool string_utils_compare_string(const char* s1, const char*s2) {
 }
 
 #define MAX_DIGITS 5
-bool string_utils_parse_string_get_nums(const char* s, uint16_t* a, uint8_t len) {
+bool string_utils_parse_string_get_nums(const char* s, uint16_t* args, uint8_t args_size) {
     size_t i = 0;
     size_t k = 0;
     size_t j = 0;
     uint8_t buff_size = MAX_DIGITS + 1;
     char buff[buff_size];
-    while (s[i] != '\0' && j != len) {
+    bool is_data_invalid = false;
+    while (s[i] != '\0' && j != args_size) {
         buff[k] = s[i];
         i++;
         k++;
+        if (k > buff_size - 1) {
+            is_data_invalid = true;
+            break;
+        }
         if (k <= buff_size && buff[k - 1] == ' ') {
             uint16_t val = strtol(buff, NULL, 10);
-            a[j] = val;
+            args[j] = val;
             j++;
             k = 0;
             for (size_t z = 0; z < 4; z++) {
@@ -40,12 +45,12 @@ bool string_utils_parse_string_get_nums(const char* s, uint16_t* a, uint8_t len)
     }
     if (s[i] == '\0') {
         uint16_t val = strtol(buff, NULL, 10);
-        a[j] = val;
+        args[j] = val;
     }
 
-    if (len - 1 != j && j != len) {
-        for (size_t z = j + 1; z < len; z++) {
-            a[z] = 0;
+    if ((args_size - 1 != j && j != args_size) || is_data_invalid == true) {
+        for (size_t z = 0; z < args_size; z++) {
+            args[z] = 0;
         }
         return false;
     }
