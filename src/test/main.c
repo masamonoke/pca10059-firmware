@@ -3,6 +3,7 @@
 #include "suit_queue/queue_test_runner.c"
 #include "suit_stack/stack_test_runner.c"
 #include "suit_string_utils/string_utils_test_runner.c"
+#include "suit_math_utils/math_utils_test_runner.c"
 
 #include "module/io/gpio_utils.h"
 #include "module/log/nordic_usb_logging.h"
@@ -17,6 +18,7 @@ static void run_all_test(void) {
     RUN_TEST_GROUP(Queue);
     RUN_TEST_GROUP(Stack);
     RUN_TEST_GROUP(StringUtils);
+    RUN_TEST_GROUP(MathUtils);
 }
 
 int main(int argc, const char* argv[]) {
