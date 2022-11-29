@@ -69,19 +69,18 @@ static uint8_t s_get_num_len_(uint16_t num) {
     return len;
 }
 
-static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
+static void s_prepare_3_value_message_(const uint32_t val1, const uint32_t val2, const uint32_t val3,
+         const char* start_of_message, const uint16_t mes_len, const char* chars) {
     s_clear_message_();
-    char s[13] = "Color set to ";
-    uint8_t start_message_len = 13;
-    for (size_t i = 0; i < start_message_len; i++) {
-        s_message_[i] = s[i];
+    for (size_t i = 0; i < mes_len; i++) {
+        s_message_[i] = start_of_message[i];
     }
     uint8_t len;
-    len = s_get_num_len_(r);
+    len = s_get_num_len_(val1);
     char num[3];
-    sprintf(num, "%ld", r);
-    uint8_t cur_idx = start_message_len;
-    s_message_[cur_idx++] = 'R';
+    sprintf(num, "%ld", val1);
+    uint8_t cur_idx = mes_len;
+    s_message_[cur_idx++] = chars[0];
     s_message_[cur_idx++] = '=';
     size_t k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
@@ -90,10 +89,10 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
 
     cur_idx += len;
     s_message_[cur_idx++] = ' ';
-    s_message_[cur_idx++] = 'G';
+    s_message_[cur_idx++] = chars[1];
     s_message_[cur_idx++] = '=';
-    len = s_get_num_len_(g);
-    sprintf(num, "%ld", g);
+    len = s_get_num_len_(val2);
+    sprintf(num, "%ld", val2);
     k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
         s_message_[i] = num[k];
@@ -101,10 +100,10 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
 
     cur_idx += len;
     s_message_[cur_idx++] = ' ';
-    s_message_[cur_idx++] = 'B';
+    s_message_[cur_idx++] = chars[2];
     s_message_[cur_idx++] = '=';
-    len = s_get_num_len_(b);
-    sprintf(num, "%ld", b);
+    len = s_get_num_len_(val3);
+    sprintf(num, "%ld", val3);
     k = 0;
     for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
         s_message_[i] = num[k];
@@ -117,56 +116,7 @@ static void s_prepare_rgb_message_(uint32_t r, uint32_t g, uint32_t b) {
 
     s_len_ = cur_idx;
     s_is_message_ = true;
-}
 
-static void s_prepare_hsv_message_(uint32_t h, uint32_t s, uint32_t v) {
-    s_clear_message_();
-    char str[13] = "Color set to ";
-    uint8_t start_message_len = 13;
-    for (size_t i = 0; i < start_message_len; i++) {
-        s_message_[i] = str[i];
-    }
-
-    uint8_t len;
-    len = s_get_num_len_(h);
-    char num[3];
-    sprintf(num, "%ld", h);
-    uint8_t cur_idx = start_message_len;
-    s_message_[cur_idx++] = 'H';
-    s_message_[cur_idx++] = '=';
-    size_t k = 0;
-    for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
-        s_message_[i] = num[k];
-    }
-
-    cur_idx += len;
-    s_message_[cur_idx++] = ' ';
-    s_message_[cur_idx++] = 'S';
-    s_message_[cur_idx++] = '=';
-    len = s_get_num_len_(s);
-    sprintf(num, "%ld", s);
-    k = 0;
-    for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
-        s_message_[i] = num[k];
-    }
-
-    cur_idx += len;
-    s_message_[cur_idx++] = ' ';
-    s_message_[cur_idx++] = 'V';
-    s_message_[cur_idx++] = '=';
-    len = s_get_num_len_(v);
-    sprintf(num, "%ld", v);
-    k = 0;
-    for (size_t i = cur_idx; i < cur_idx + len; i++, k++) {
-        s_message_[i] = num[k];
-    }
-    cur_idx += len;
-
-    s_message_[cur_idx++] = '\r';
-    s_message_[cur_idx++] = '\n';
-    s_message_[cur_idx] = '\0';
-    s_len_ = cur_idx;
-    s_is_message_ = true;
 }
 
 static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx) {
@@ -183,7 +133,8 @@ static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx)
     uint32_t b = args[2];
     nordic_rgb_pwm_set_color(r, g, b);
 
-    s_prepare_rgb_message_(r, g, b);
+    char chars[] = {'r', 'g', 'b'};
+    s_prepare_3_value_message_(r, g, b, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to R=%d G=%d B=%d", r, g, b);
 
     return true;
@@ -205,8 +156,12 @@ static bool cli_functions_hsv_proceed(const char* input, uint8_t args_start_idx)
     uint8_t v = args[1];
 
     nordic_rgb_pwm_set_hsv_color(h, s, v);
-    s_prepare_hsv_message_(h, s, v);
+
+    
+    char chars[] = {'h', 's', 'v'};
+    s_prepare_3_value_message_(h, s, v, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to H=%d S=%d V=%d", h, s, v);
+
     return true;
 }
 
