@@ -17,16 +17,18 @@ bool string_utils_compare_string(const char* s1, const char*s2) {
     return true;
 }
 
+#define MAX_DIGITS 5
 bool string_utils_parse_string_get_nums(const char* s, uint16_t* a, uint8_t len) {
     size_t i = 0;
     size_t k = 0;
     size_t j = 0;
-    char buff[4];
+    uint8_t buff_size = MAX_DIGITS + 1;
+    char buff[buff_size];
     while (s[i] != '\0' && j != len) {
         buff[k] = s[i];
         i++;
         k++;
-        if (k <= 4 && buff[k - 1] == ' ') {
+        if (k <= buff_size && buff[k - 1] == ' ') {
             uint16_t val = strtol(buff, NULL, 10);
             a[j] = val;
             j++;
@@ -40,7 +42,7 @@ bool string_utils_parse_string_get_nums(const char* s, uint16_t* a, uint8_t len)
         uint16_t val = strtol(buff, NULL, 10);
         a[j] = val;
     }
-    
+
     if (len - 1 != j && j != len) {
         for (size_t z = j + 1; z < len; z++) {
             a[z] = 0;

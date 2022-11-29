@@ -56,15 +56,10 @@ static void s_prepare_help_message_(void) {
 }
 
 static uint8_t s_get_num_len_(uint16_t num) {
-    uint8_t len;
-    if (num / 100 == 0) {
-        if (num / 10 == 0) {
-            len = 1;
-        } else {
-            len = 2;
-        }
-    } else {
-        len = 3;
+    uint8_t len = 0;
+    while (num != 0) {
+        num /= 10;
+        len++;
     }
     return len;
 }
@@ -77,7 +72,7 @@ static void s_prepare_3_value_message_(const uint32_t val1, const uint32_t val2,
     }
     uint8_t len;
     len = s_get_num_len_(val1);
-    char num[3];
+    char num[5];
     sprintf(num, "%ld", val1);
     uint8_t cur_idx = mes_len;
     s_message_[cur_idx++] = chars[0];
