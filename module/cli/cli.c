@@ -104,7 +104,7 @@ static void s_prepare_message_(const uint16_t* vals, uint16_t vals_count,
 }
 
 
-static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx) {
+static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_idx) {
     uint16_t args[3];
     if (!s_get_args_(input, args_start_idx, args, 3)) {
         return false;
@@ -112,9 +112,9 @@ static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx)
     args[0] = math_utils_clamp_int(args[0], 255, 0);
     args[1] = math_utils_clamp_int(args[1], 255, 0);
     args[2] = math_utils_clamp_int(args[2], 255, 0);
-    uint32_t r = args[0];
-    uint32_t g = args[1];
-    uint32_t b = args[2];
+    uint8_t r = args[0];
+    uint8_t g = args[1];
+    uint8_t b = args[2];
     nordic_rgb_pwm_set_color(r, g, b);
 
     char chars[] = "RGB";
@@ -125,7 +125,7 @@ static bool cli_functions_rgb_proceed(const char* input, uint8_t args_start_idx)
     return true;
 }
 
-static bool cli_functions_hsv_proceed(const char* input, uint8_t args_start_idx) {
+static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_idx) {
     uint16_t args[3];
     if (!s_get_args_(input, args_start_idx, args, 3)) {
         return false;
@@ -171,11 +171,11 @@ typedef struct {
 static command_obj_t s_commands_[] = {
     {
         .command = "rgb",
-        .command_func = cli_functions_rgb_proceed
+        .command_func = s_cli_functions_rgb_proceed_
     },
     {
         .command = "hsv",
-        .command_func = cli_functions_hsv_proceed
+        .command_func = s_cli_functions_hsv_proceed_
     },
     {
         .command = "help",

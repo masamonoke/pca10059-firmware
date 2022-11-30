@@ -15,7 +15,7 @@ static void s_cycle_without_com_acm_(void) {
 
 int main(void) {
     nordic_usb_logging_init();
-    void (*func)(void);
+    void (*func)(void) = s_cycle_without_com_acm_;
 //to enable usb cli make clean && make dfu ESTC_USB_CLI_ENABLED=1 or 0 otherwise
 //ESTC_USB_CLI_ENABLED=1 by default
 #ifdef ESTC_USB_CLI_ENABLED
@@ -24,11 +24,7 @@ int main(void) {
         nrfx_pwm_t pwm_instance = NRFX_PWM_INSTANCE(0);
         nordic_rgb_pwm_utils_init(pwm_instance);
         func = s_cycle_with_com_acm_;
-    } else {
-        func = s_cycle_without_com_acm_;    
     }
-#else
-    func = s_cycle_without_com_acm_;
 #endif
 
 

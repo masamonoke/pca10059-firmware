@@ -14,3 +14,7 @@ INC_FILES += \
 	$(SDK_ROOT)/modules/nrfx/drivers/include \
 
 include ../Makefile.common
+
+#to reset this value first make clean
+ESTC_USB_CLI_ENABLED = 1
+CFLAGS += -DESTC_USB_CLI_ENABLED=$(ESTC_USB_CLI_ENABLED)
