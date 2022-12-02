@@ -8,12 +8,14 @@
 #include "nrf_log.h"
 #include "module/app/hsv_editor.h"
 #include "module/app/hsv_editor_nvm.h"
+#include "module/cli/usb/usb_cli.h"
 
 #define LAST_ID_DIGITS 8 //id 6608
 
 int main(void) {
     hsv_editor_init();
     hsv_editor_nvm_init();
+    usb_cli_init();
 
     uint16_t initial_hue;
     uint16_t initial_satur;
@@ -31,19 +33,22 @@ int main(void) {
         initial_value = 100;
     }
 
-    hsv_editor_set_init_hsv(initial_hue, initial_satur, initial_value);
+    hsv_editor_set_hsv(initial_hue, initial_satur, initial_value);
 
     while(true) {
+
         hsv_editor_nvm_is_prev_set_color_saved(buf);
         hsv_editor_change_color();
         hsv_editor_process_current_behavior();
+
         if (hsv_editor_get_is_nvm_write_time()) {
-            NRF_LOG_INFO("%d %d %d", buf[0], buf[1], buf[2]);
             hsv_t cur_hsv_obj = hsv_editor_get_hsv_object();
             hsv_editor_nvm_write_hsv(cur_hsv_obj.hue, cur_hsv_obj.saturation, cur_hsv_obj.value);
             hsv_editor_set_is_nvm_write_time(false);
-            NRF_LOG_INFO("Saved color %d %d %d", cur_hsv_obj.hue, cur_hsv_obj.saturation, cur_hsv_obj.value);
+            NRF_LOG_INFO("Saved HSV color to nvm: %d %d %d", cur_hsv_obj.hue, cur_hsv_obj.saturation, cur_hsv_obj.value);
         }
+
+        usb_cli_process();
 
         nordic_usb_logging_process();
     }

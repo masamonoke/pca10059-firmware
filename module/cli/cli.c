@@ -3,6 +3,7 @@
 #include "module/utils/string_utils.h"
 #include "nrf_log.h"
 #include "module/utils/math_utils.h"
+#include "module/app/hsv_editor.h"
 
 #define MESSAGE_SIZE 150
 static char s_message_[MESSAGE_SIZE];
@@ -103,7 +104,6 @@ static void s_prepare_message_(const uint16_t* vals, uint16_t vals_count,
     s_is_message_ = true;
 }
 
-
 static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_idx) {
     uint16_t args[3];
     if (!s_get_args_(input, args_start_idx, args, 3)) {
@@ -119,6 +119,13 @@ static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_i
 
     char chars[] = "RGB";
     uint16_t vals[] = { r, g, b };
+    rgb_t rgb_obj = {
+        .red = r,
+        .blue = b,
+        .green = g
+    };
+    hsv_t hsv_obj = converter_to_hsv_from_rgb(rgb_obj);
+    hsv_editor_set_hsv(hsv_obj.hue, hsv_obj.saturation, hsv_obj.value);
     s_prepare_message_(vals, 3, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to R=%d G=%d B=%d", r, g, b);
 
@@ -144,6 +151,7 @@ static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_i
     
     char chars[] = "HSV";
     uint16_t vals[] = { h, s, v };
+    hsv_editor_set_hsv(h, s, v);
     s_prepare_message_(vals, 3, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to H=%d S=%d V=%d", h, s, v);
 

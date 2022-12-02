@@ -129,13 +129,16 @@ void s_define_status_led_behavior_(void) {
 }
 
 bool s_is_nvm_write_time_ = false;
+bool s_is_edit_ = false;
 
 void double_click_handler() {
     if (s_current_mode_ == VALUE_MODIFY_MODE) {
         s_current_mode_ = NO_INPUT_MODE;
         //if double click happened on the last mode so all values set and can be written to nvm
         s_is_nvm_write_time_ = true;
+        s_is_edit_ = false;
     } else {
+        s_is_edit_ = true;
         s_current_mode_++;
     }
     s_define_status_led_behavior_();
@@ -162,7 +165,6 @@ static void init(void) {
     s_current_mode_ = NO_INPUT_MODE;
     s_mode_led_behavior_ = s_mode_led_turn_off_;
 
-    //s_hsv_data_ = converter_get_hsv_data(initial_hue, initial_satur, initial_value);
     s_is_changing_color_ = false;
 } 
 
@@ -184,7 +186,7 @@ void hsv_editor_change_color(void) {
     }
 }
 
-void hsv_editor_set_init_hsv(uint16_t h, uint8_t s, uint8_t v) {
+void hsv_editor_set_hsv(uint16_t h, uint8_t s, uint8_t v) {
     s_hsv_data_ = converter_get_hsv_data(h, s, v);
     nordic_rgb_pwm_set_hsv_color(s_hsv_data_.hue, s_hsv_data_.saturation, s_hsv_data_.value);
 }
@@ -199,4 +201,8 @@ hsv_t hsv_editor_get_hsv_object(void) {
 
 void hsv_editor_set_is_nvm_write_time(bool is_write_time) {
     s_is_nvm_write_time_ = is_write_time;
+}
+
+bool hsv_editor_is_edit_completed(void) {
+    return s_is_edit_ == false;
 }
