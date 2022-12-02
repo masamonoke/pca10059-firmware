@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+//TODO: test
+
 void cli_proceed(char* input);
 
 bool cli_is_there_message(void);
