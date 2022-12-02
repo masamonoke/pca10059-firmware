@@ -52,11 +52,9 @@ static void s_transition_ (uint32_t led_id) {
     if (obj->state == LED_OFF) {
         obj->state = LED_ON;
         gpio_utils_turn_on_led(obj->led_id);
-        NRF_LOG_INFO("Turned on LED: %d", led_id);
     } else {
         obj->state = LED_OFF;
         gpio_utils_turn_off_led(obj->led_id);
-        NRF_LOG_INFO("Turned off LED: %d", led_id);
     }
 }
 
