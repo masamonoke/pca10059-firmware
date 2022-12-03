@@ -173,6 +173,7 @@ static bool s_cli_functions_help_proceed_(const char* input, uint8_t args_start_
     return true;
 }
 
+//TODO: debug
 static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t args_start_idx) {
     uint8_t str_len = strlen(input);
     uint8_t space_count = 0;
@@ -222,7 +223,7 @@ static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_i
     if (color.red == 0 && color.green == 0 && color.blue == 0) {
         char message[50] = "There is no color with name ";
         strcat(message, color_name);
-        char tmp[] = "\r\n"
+        char tmp[] = "\r\n";
         strcat(message, tmp);
         cli_set_message(message, strlen(message));
         return true;
@@ -231,7 +232,44 @@ static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_i
     hsv_editor_set_hsv(hsv_color.hue, hsv_color.saturation, hsv_color.value);
     char message[30] = "PWM color set to ";
     strcat(message, color_name);
-    char tmp[] = "\r\n"
+    char tmp[] = "\r\n";
+    strcat(message, tmp);
+    cli_set_message(message, strlen(message));
+    return true;
+}
+
+static bool s_cli_functions_del_color_proceed_(const char* input, uint8_t args_start_idx) {
+    char color_name[10];
+    string_utils_substring_to_end(input, args_start_idx + 1, color_name);
+    rgb_t color = hsv_editor_rgb_color_get_color_by_name(color_name);
+    if (color.red == 0 && color.green == 0 && color.blue == 0) {
+        char message[50] = "There is no color with name ";
+        strcat(message, color_name);
+        char tmp[] = "\r\n";
+        strcat(message, tmp);
+        cli_set_message(message, strlen(message));
+        return true;
+    }
+
+    hsv_editor_rgb_color_storage_delete(color_name);
+    char message[30] = "Color ";
+    strcat(message, color_name);
+    char tmp[] = " deleted\r\n";
+    strcat(message, tmp);
+    cli_set_message(message, strlen(message));
+    return true;
+}
+
+static bool s_cli_functions_add_current_color_(const char* input, uint8_t args_start_idx) {
+    //TODO: check that name is not too long and can be stored
+    char color_name[10];
+    string_utils_substring_to_end(input, args_start_idx + 1, color_name);
+    hsv_t hsv = hsv_editor_get_hsv_object();
+    rgb_t rgb = converter_to_rgb_from_hsv(hsv);
+    hsv_editor_rgb_color_storage_add_color(rgb.red, rgb.green, rgb.blue, color_name);
+    char message[30] = "Color ";
+    strcat(message, color_name);
+    char tmp[] = " saved\r\n";
     strcat(message, tmp);
     cli_set_message(message, strlen(message));
     return true;
@@ -263,6 +301,14 @@ static command_obj_t s_commands_[] = {
     {
         .command = "apply_color",
         .command_func = s_cli_functions_apply_color_
+    },
+    {
+        .command = "del_color",
+        .command_func = s_cli_functions_del_color_proceed_
+    },
+    {
+        .command = "add_current_color",
+        .command_func = s_cli_functions_add_current_color_
     }
 };
 
