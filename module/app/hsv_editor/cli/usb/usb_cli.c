@@ -2,7 +2,7 @@
 #include "module/io/gpio_utils.h"
 #include "nrf_log.h"
 #include "../cli.h"
-#include "module/app/hsv_editor.h"
+#include "module/app/hsv_editor/hsv_editor.h"
 
 #define READ_SIZE 1
 

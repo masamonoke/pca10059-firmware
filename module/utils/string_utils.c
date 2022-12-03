@@ -57,6 +57,9 @@ bool string_utils_parse_string_get_nums(const char* s, uint16_t* args, uint8_t a
     return true;
 }
 
+/**
+ * Substring function including character at start and end param index
+*/
 void string_utils_substring(const char* s, uint16_t start, uint16_t end, char* res) {
     size_t i = start;
     size_t k = 0;
@@ -75,6 +78,7 @@ void string_utils_substring_to_end(const char* s, uint16_t start, char* res) {
         i++;
         k++;
     }
+    res[k] = '\0';
 }
 
 void string_utils_to_lower_case(char *str) {

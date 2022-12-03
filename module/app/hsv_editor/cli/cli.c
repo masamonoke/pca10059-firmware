@@ -3,7 +3,10 @@
 #include "module/utils/string_utils.h"
 #include "nrf_log.h"
 #include "module/utils/math_utils.h"
-#include "module/app/hsv_editor.h"
+#include "module/app/hsv_editor/hsv_editor.h"
+#include "module/utils/array_utils.h"
+#include "../hsv_editor_rgb_color_storage.h"
+#include "string.h"
 
 #define MESSAGE_SIZE 150
 static char s_message_[MESSAGE_SIZE];
@@ -16,6 +19,7 @@ static void s_clear_message_(void) {
     }
 }
 
+//TODO: remove len
 void cli_set_message(char* str, uint16_t len) {
     s_clear_message_();
     size_t i;
@@ -158,7 +162,7 @@ static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_i
     return true;
 }
 
-static bool cli_functions_help_proceed(const char* input, uint8_t args_start_idx) {
+static bool s_cli_functions_help_proceed_(const char* input, uint8_t args_start_idx) {
     if (input[args_start_idx] != '\0') {
         return false;
     }
@@ -169,13 +173,76 @@ static bool cli_functions_help_proceed(const char* input, uint8_t args_start_idx
     return true;
 }
 
-#define COMMAND_STR_LEN 10
+static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t args_start_idx) {
+    uint8_t str_len = strlen(input);
+    uint8_t space_count = 0;
+    size_t i;
+    for (i = args_start_idx + 1; i < str_len; i++) {
+        if (input[i] == ' ') {
+            space_count++;
+            if (space_count == 3) {
+                break;
+            }
+        }
+    }
+    char num_args_substring[30];
+    string_utils_substring(input, 0, i - 1, num_args_substring);
+    num_args_substring[i] = '\0';
+    uint16_t args[3];
+    if (!s_get_args_(num_args_substring, args_start_idx, args, 3)) {
+        return false;
+    }
+
+    uint8_t r = math_utils_clamp_int(args[0], 255, 0);
+    uint8_t g = math_utils_clamp_int(args[1], 255, 0);
+    uint8_t b = math_utils_clamp_int(args[2], 255, 0);
+
+    char color_name[10];
+    string_utils_substring_to_end(input, i + 1, color_name);
+
+    bool res = hsv_editor_rgb_color_storage_add_color(r, g, b, color_name);
+    if (!res) {
+        char message[] = "Color with that name is already saved\r\n";
+        cli_set_message(message, strlen(message));
+        return true;
+    }
+
+    char message[100] = "Color with name " ;
+    strcat(message, color_name);
+    char tmp[] = " saved to storage\r\n";
+    strcat(message, tmp);
+    cli_set_message(message, strlen(message));
+    return true;
+}
+
+static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_idx) {
+    char color_name[10];
+    string_utils_substring_to_end(input, args_start_idx + 1, color_name);
+    rgb_t color = hsv_editor_rgb_color_get_color_by_name(color_name);
+    if (color.red == 0 && color.green == 0 && color.blue == 0) {
+        char message[50] = "There is no color with name ";
+        strcat(message, color_name);
+        char tmp[] = "\r\n"
+        strcat(message, tmp);
+        cli_set_message(message, strlen(message));
+        return true;
+    }
+    hsv_t hsv_color = converter_to_hsv_from_rgb(color);
+    hsv_editor_set_hsv(hsv_color.hue, hsv_color.saturation, hsv_color.value);
+    char message[30] = "PWM color set to ";
+    strcat(message, color_name);
+    char tmp[] = "\r\n"
+    strcat(message, tmp);
+    cli_set_message(message, strlen(message));
+    return true;
+}
+
+#define COMMAND_STR_LEN 20
 typedef struct {
     char command[COMMAND_STR_LEN];
     bool (* command_func)(const char*, uint8_t);
 } command_obj_t;
 
-#define COMMAND_LIST_LEN 3
 static command_obj_t s_commands_[] = {
     {
         .command = "rgb",
@@ -187,12 +254,20 @@ static command_obj_t s_commands_[] = {
     },
     {
         .command = "help",
-        .command_func = cli_functions_help_proceed
+        .command_func = s_cli_functions_help_proceed_
+    },
+    {
+        .command = "add_rgb_color",
+        .command_func = s_cli_functions_add_rgb_color_proceed_
+    },
+    {
+        .command = "apply_color",
+        .command_func = s_cli_functions_apply_color_
     }
 };
 
 static void s_define_command_(const char* command_str, const char* input, const size_t args_start_idx) {
-    for (uint16_t com_idx = 0; com_idx < COMMAND_LIST_LEN; com_idx++) {
+    for (uint16_t com_idx = 0; com_idx < ARRAY_LEN(s_commands_); com_idx++) {
         if (string_utils_compare_string(s_commands_[com_idx].command, command_str)) {
             if (!s_commands_[com_idx].command_func(input, args_start_idx)) {
                 break;

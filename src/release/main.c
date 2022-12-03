@@ -6,9 +6,9 @@
 #include <math.h>
 #include "nrfx_nvmc.h"
 #include "nrf_log.h"
-#include "module/app/hsv_editor.h"
-#include "module/app/hsv_editor_nvm.h"
-#include "module/cli/usb/usb_cli.h"
+#include "module/app/hsv_editor/hsv_editor.h"
+#include "module/app/hsv_editor/hsv_editor_nvm.h"
+#include "module/app/hsv_editor/cli/usb/usb_cli.h"
 
 #define LAST_ID_DIGITS 8 //id 6608
 

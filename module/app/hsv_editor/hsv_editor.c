@@ -128,7 +128,9 @@ void s_define_status_led_behavior_(void) {
     }
 }
 
+//TODO: remove
 bool s_is_nvm_write_time_ = false;
+
 bool s_is_edit_ = false;
 
 void double_click_handler() {
