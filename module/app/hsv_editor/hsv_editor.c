@@ -154,8 +154,8 @@ static void s_restore_previous_session_(void) {
     uint8_t restored_entries_count;
     hsv_editor_nvm_restore_previous_rgb_storage(restored_colors, restored_color_names, &restored_entries_count);
     if (restored_entries_count != 0) {
-        hsv_editor_rgb_color_set_names(restored_color_names, restored_entries_count);
-        hsv_editor_rgb_color_set_colors(restored_colors, restored_entries_count);
+        hsv_editor_rgb_color_storage_set_names(restored_color_names, restored_entries_count);
+        hsv_editor_rgb_color_storage_set_colors(restored_colors, restored_entries_count);
     }
 }
 
@@ -189,6 +189,7 @@ static bool s_is_init_ = false;
 void hsv_editor_init(void) {
     if (!s_is_init_) {
         init();
+        hsv_editor_nvm_init();
         s_is_init_ = true;
     }
 }
@@ -203,7 +204,7 @@ void hsv_editor_change_color(void) {
     }
 }
 
-void hsv_editor_set_hsv(uint16_t h, uint8_t s, uint8_t v) {
+void hsv_editor_set_hsv_object(uint16_t h, uint8_t s, uint8_t v) {
     s_hsv_data_ = converter_get_hsv_data(h, s, v);
     nordic_rgb_pwm_set_hsv_color(s_hsv_data_.hue, s_hsv_data_.saturation, s_hsv_data_.value);
 }

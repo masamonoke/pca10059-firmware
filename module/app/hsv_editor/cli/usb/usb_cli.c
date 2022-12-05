@@ -40,8 +40,7 @@ void usb_cli_init(app_usbd_cdc_acm_t instance) {
 }
 
 void usb_cli_process(void) {
-    while (app_usbd_event_queue_process()) {
-    }
+    while (app_usbd_event_queue_process()) {}
 }
 
 static char s_buff_[BUFF_SIZE];
@@ -70,8 +69,8 @@ static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_ac
     case APP_USBD_CDC_ACM_USER_EVT_TX_DONE: {
         if (cli_is_there_message()) {
             char message[MESSAGE_SIZE];
-            uint16_t len;
-            cli_get_message(message, &len);
+            cli_get_message(message);
+            uint16_t len = strlen(message);
             app_usbd_cdc_acm_write(&usb_cdc_acm, message, len);
         }
         break;
@@ -83,10 +82,11 @@ static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_ac
         do {
             if (s_rx_buffer_[0] == '\r' || s_rx_buffer_[0] == '\n') {
                 s_buff_[s_cur_buf_idx_ - 1] = '\0';
+                NRF_LOG_INFO("%s", s_buff_);
                 if (hsv_editor_is_edit_completed()) {
                     cli_proceed(s_buff_);
                 } else {
-                    cli_set_message("PWM module is locked by user\r\n", 30);
+                    cli_set_message("PWM module is locked by user\r\n");
                 }
                 s_clean_buffer_();
                 ret = app_usbd_cdc_acm_write(&usb_cdc_acm, "\r\n", 2);

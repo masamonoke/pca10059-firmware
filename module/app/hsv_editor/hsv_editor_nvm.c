@@ -4,6 +4,7 @@
 #include "hsv_editor_rgb_color_storage.h"
 #include <string.h>
 #include "module/utils/string_utils.h"
+#include "nrf_log.h"
 
 #define SAVED_SET_COLOR_SPACE_ADDR START_ADDR
 #define NAMED_COLORS_SPACE_ADDR (SAVED_SET_COLOR_SPACE_ADDR + PAGE_SIZE)
@@ -15,7 +16,7 @@ static nvm_instance_t s_color_save_instance_;
 static bool s_is_init_ = false;
 void hsv_editor_nvm_init(void) {
     if (!s_is_init_) {
-        nvm_init_instance(&s_color_save_instance_, SAVED_SET_COLOR_SPACE_ADDR);
+        nvm_reset_instance(&s_color_save_instance_, SAVED_SET_COLOR_SPACE_ADDR);
         s_is_init_ = true;
     }
 }
@@ -48,11 +49,11 @@ void hsv_editor_nvm_prepare_rgb_storage_to_write(uint32_t* array, uint8_t* len) 
     hsv_editor_nvm_restore_previous_rgb_storage(restored_colors,
                                                 restored_color_names, &restored_entries_count);
 
-    uint8_t curren_entries_count = hsv_editor_rgb_get_last_free_idx();
+    uint8_t curren_entries_count = hsv_editor_rgb_color_storage_get_last_free_idx();
     rgb_t colors[COLORS_ENTRY_SIZE];
-    hsv_editor_rgb_color_get_colors(colors);
+    hsv_editor_rgb_color_storage_get_colors(colors);
     char color_names[COLORS_ENTRY_SIZE][COLORS_ENTRY_SIZE];
-    hsv_editor_rgb_color_get_names(color_names);
+    hsv_editor_rgb_color_storage_get_names(color_names);
 
     size_t i = 0;
     bool is_duplicate = false;
@@ -79,9 +80,7 @@ void hsv_editor_nvm_prepare_rgb_storage_to_write(uint32_t* array, uint8_t* len) 
     *len = i;
 }
 
-void hsv_editor_nvm_restore_previous_rgb_storage(rgb_t* colors, char color_names[10][10], uint8_t* len) {
-    uint32_t* ptr = (uint32_t*) NAMED_COLORS_SPACE_ADDR;
-    uint32_t buf[PAGE_SIZE];
+static void s_read_nvm_(uint32_t* ptr, uint32_t* buf) {
     size_t i = 0;
 
     while ((uint32_t) (ptr + i) != (NAMED_COLORS_SPACE_ADDR + PAGE_SIZE)) {
@@ -98,11 +97,9 @@ void hsv_editor_nvm_restore_previous_rgb_storage(rgb_t* colors, char color_names
         buf[i] = *(ptr + i);
         i++;
     }
+}
 
-    ptr = (uint32_t*) NAMED_COLORS_SPACE_ADDR;
-
-    uint32_t restored_colors_data[MAX_RGB_DATA_SIZE];
-    memset(restored_colors_data, 0, sizeof(uint32_t) * MAX_RGB_DATA_SIZE);
+static void s_assemble_not_deleted_colors_data_(uint32_t* buf, uint32_t* restored_colors_data) {
     int k = 0;
     size_t z = 0;
     size_t last_stop = 0;
@@ -134,9 +131,13 @@ void hsv_editor_nvm_restore_previous_rgb_storage(rgb_t* colors, char color_names
 
         k++;
     }
+}
 
+static void s_parse_restored_data_(rgb_t* colors, char color_names[10][10], uint8_t* len, uint32_t* restored_colors_data) {
+    int k = 0;
+    size_t z = 0;
     size_t entry_idx = 0;
-    for (i = 0; i < MAX_RGB_DATA_SIZE - 1; i++) {
+    for (size_t i = 0; i < MAX_RGB_DATA_SIZE - 1; i++) {
 
         if (restored_colors_data[i] == 0) {
             if (restored_colors_data[i + 1] == 0) {
@@ -154,8 +155,7 @@ void hsv_editor_nvm_restore_previous_rgb_storage(rgb_t* colors, char color_names
             colors[entry_idx].green = restored_colors_data[k--];
             colors[entry_idx].red = restored_colors_data[k--];
             z = 0;
-            for (; k >= 0 && (restored_colors_data[k] != ERASED_WORD 
-                    && restored_colors_data[k] != LABEL_MARKED_FOR_DELETION); k--, z++) {
+            for (; k >= 0 && (restored_colors_data[k] != ERASED_WORD && restored_colors_data[k] != LABEL_MARKED_FOR_DELETION); k--, z++) {
                 color_names[entry_idx][z] = (char) restored_colors_data[k];
             }
             color_names[entry_idx][z] = '\0';
@@ -163,7 +163,23 @@ void hsv_editor_nvm_restore_previous_rgb_storage(rgb_t* colors, char color_names
             entry_idx++;
         }
     }
+
     *len = entry_idx;
+}
+
+void hsv_editor_nvm_restore_previous_rgb_storage(rgb_t* colors, char color_names[10][10], uint8_t* len) {
+    uint32_t* ptr = (uint32_t*) NAMED_COLORS_SPACE_ADDR;
+    uint32_t buf[PAGE_SIZE];
+
+    s_read_nvm_(ptr, buf);
+
+    ptr = (uint32_t*) NAMED_COLORS_SPACE_ADDR;
+
+    uint32_t restored_colors_data[MAX_RGB_DATA_SIZE];
+    memset(restored_colors_data, 0, sizeof(uint32_t) * MAX_RGB_DATA_SIZE);
+    s_assemble_not_deleted_colors_data_(buf, restored_colors_data);
+
+    s_parse_restored_data_(colors, color_names, len, restored_colors_data);
 }
 
 void hsv_editor_nvm_mark_for_deletion_rgb_storage_entry(char* color_name, uint16_t* idx) {
@@ -192,11 +208,11 @@ void hsv_editor_nvm_mark_for_deletion_rgb_storage_entry(char* color_name, uint16
         }
         i++;
     }
+    //if not found such color_name in nvm
     *idx = -1;
 }
 
-//TODO: restore old actual data when page erased
-bool hsv_editor_save_color_with_color_name(char* message) {
+bool hsv_editor_save_added_colors(void) {
     uint32_t array[130];
     uint8_t len;
     hsv_editor_nvm_prepare_rgb_storage_to_write(array, &len);
@@ -207,12 +223,17 @@ bool hsv_editor_save_color_with_color_name(char* message) {
         hsv_editor_nvm_restore_previous_rgb_storage(restored_colors, restored_color_names, &restored_entries_count);
 
         nvm_instance_t color_names_inst;
-        nvm_init_instance(&color_names_inst, NAMED_COLORS_SPACE_ADDR);
+        nvm_reset_instance(&color_names_inst, NAMED_COLORS_SPACE_ADDR);
         if (restored_entries_count > 0 && *(color_names_inst.p_addr - 1) != LABEL_MARKED_FOR_DELETION) {
             color_names_inst.p_addr++;
         }
         
-        nvm_write_values(&color_names_inst, array, len);
+        bool is_erase_happened = nvm_write_values(&color_names_inst, array, len);
+        if (is_erase_happened) {    
+            NRF_LOG_INFO("Erased Named colors page");
+            hsv_editor_save_added_colors();
+        }
+
         return true;
     }
 
@@ -230,6 +251,8 @@ bool hsv_editor_nvm_delete_color(char* color_name) {
     p += delete_idx;
     uint32_t addr = (uint32_t) p;
     nrfx_nvmc_word_write(addr, LABEL_MARKED_FOR_DELETION);
+
+    NRF_LOG_INFO("Deleted color \"%s\"", color_name);
 
     return true;
 }
