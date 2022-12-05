@@ -12,10 +12,21 @@
 
 #define LAST_ID_DIGITS 8 //id 6608
 
+static void s_dummy_func_(void) {}
+
 int main(void) {
     hsv_editor_init();
     hsv_editor_nvm_init();
-    usb_cli_init();
+
+    void (*usb_proceed)(void) = s_dummy_func_;
+#ifdef ESTC_USB_CLI_ENABLED
+    if (ESTC_USB_CLI_ENABLED) {
+        usb_cli_init();
+        usb_proceed = usb_cli_process;
+    } else {
+        usb_proceed = s_dummy_func_;    
+    }
+#endif
 
     uint16_t initial_hue;
     uint16_t initial_satur;
@@ -48,7 +59,7 @@ int main(void) {
             NRF_LOG_INFO("Saved HSV color to nvm: %d %d %d", cur_hsv_obj.hue, cur_hsv_obj.saturation, cur_hsv_obj.value);
         }
 
-        usb_cli_process();
+        usb_proceed();
 
         nordic_usb_logging_process();
     }

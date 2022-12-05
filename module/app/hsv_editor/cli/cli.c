@@ -1,13 +1,14 @@
 #include "cli.h"
 #include "module/io/led/nordic_rgb_pwm_utils.h"
 #include "module/utils/string_utils.h"
-#include "nrf_log.h"
 #include "module/utils/math_utils.h"
 #include "module/app/hsv_editor/hsv_editor.h"
 #include "module/utils/array_utils.h"
 #include "../hsv_editor_rgb_color_storage.h"
-#include "string.h"
 #include "../hsv_editor_nvm.h"
+
+#include "nrf_log.h"
+#include "string.h"
 
 #define MESSAGE_SIZE 150
 static char s_message_[MESSAGE_SIZE];
@@ -99,9 +100,10 @@ static void s_prepare_message_(const uint16_t* vals, uint16_t vals_count,
     cli_set_message(message, strlen(message));
 }
 
+#define RGB_VALUES_SIZE 3
 static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_idx) {
-    uint16_t args[3];
-    if (!s_get_args_(input, args_start_idx, args, 3)) {
+    uint16_t args[RGB_VALUES_SIZE];
+    if (!s_get_args_(input, args_start_idx, args, RGB_VALUES_SIZE)) {
         return false;
     }
     args[0] = math_utils_clamp_int(args[0], 255, 0);
