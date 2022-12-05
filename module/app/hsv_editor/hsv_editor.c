@@ -154,8 +154,8 @@ static void s_restore_previous_session_(void) {
     uint8_t restored_entries_count;
     hsv_editor_nvm_restore_previous_rgb_storage(restored_colors, restored_color_names, &restored_entries_count);
     if (restored_entries_count != 0) {
-        hsv_editor_rgb_color_set_names(restored_color_names, restored_entries_count);
-        hsv_editor_rgb_color_set_colors(restored_colors, restored_entries_count);
+        hsv_editor_rgb_color_storage_set_names(restored_color_names, restored_entries_count);
+        hsv_editor_rgb_color_storage_set_colors(restored_colors, restored_entries_count);
     }
 }
 

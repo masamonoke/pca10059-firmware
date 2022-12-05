@@ -3,12 +3,13 @@
 #include "module/io/led/nordic_rgb_pwm_utils.h"
 #include "module/io/led/led_soft_pwm.h"
 #include "module/io/button.h"
-#include <math.h>
-#include "nrfx_nvmc.h"
-#include "nrf_log.h"
 #include "module/app/hsv_editor/hsv_editor.h"
 #include "module/app/hsv_editor/hsv_editor_nvm.h"
 #include "module/app/hsv_editor/cli/usb/usb_cli.h"
+
+#include <math.h>
+#include "nrfx_nvmc.h"
+#include "nrf_log.h"
 
 #define LAST_ID_DIGITS 8 //id 6608
 

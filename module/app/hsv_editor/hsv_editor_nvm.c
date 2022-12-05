@@ -49,11 +49,11 @@ void hsv_editor_nvm_prepare_rgb_storage_to_write(uint32_t* array, uint8_t* len) 
     hsv_editor_nvm_restore_previous_rgb_storage(restored_colors,
                                                 restored_color_names, &restored_entries_count);
 
-    uint8_t curren_entries_count = hsv_editor_rgb_get_last_free_idx();
+    uint8_t curren_entries_count = hsv_editor_rgb_color_storage_get_last_free_idx();
     rgb_t colors[COLORS_ENTRY_SIZE];
-    hsv_editor_rgb_color_get_colors(colors);
+    hsv_editor_rgb_color_storage_get_colors(colors);
     char color_names[COLORS_ENTRY_SIZE][COLORS_ENTRY_SIZE];
-    hsv_editor_rgb_color_get_names(color_names);
+    hsv_editor_rgb_color_storage_get_names(color_names);
 
     size_t i = 0;
     bool is_duplicate = false;
@@ -167,7 +167,6 @@ static void s_parse_restored_data_(rgb_t* colors, char color_names[10][10], uint
     *len = entry_idx;
 }
 
-//TODO: refactor
 void hsv_editor_nvm_restore_previous_rgb_storage(rgb_t* colors, char color_names[10][10], uint8_t* len) {
     uint32_t* ptr = (uint32_t*) NAMED_COLORS_SPACE_ADDR;
     uint32_t buf[PAGE_SIZE];

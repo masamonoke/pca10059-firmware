@@ -42,7 +42,8 @@ bool cli_is_there_message(void) {
 }
 
 static void s_cli_functions_undefined_command_(void) {
-    cli_set_message("Undefined command\r\n", 19);
+    char message[] = "Undefined command\r\n";
+    cli_set_message(message, strlen(message));
     NRF_LOG_INFO("Undefined command");
 }
 
@@ -123,7 +124,8 @@ static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_i
     };
     hsv_t hsv_obj = converter_to_hsv_from_rgb(rgb_obj);
     hsv_editor_set_hsv(hsv_obj.hue, hsv_obj.saturation, hsv_obj.value);
-    s_prepare_message_(vals, 3, "Color set to ", 13, chars);
+    char message_part[] = "Color set to ";
+    s_prepare_message_(vals, 3, message_part, strlen(message_part), chars);
     NRF_LOG_INFO("Color set to R=%d G=%d B=%d", r, g, b);
 
     hsv_editor_set_is_nvm_write_time(true);
@@ -160,8 +162,9 @@ static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_i
 }
 
 static void s_prepare_help_message_(void) {
-    char message[] = "RGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp\r\n\0";
-    cli_set_message(message, strlen(message));
+    char message[] = "RGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp\r\n";
+    //TODO: fix
+    cli_set_message(message, 64);
 }
 
 static bool s_cli_functions_help_proceed_(const char* input, uint8_t args_start_idx) {
@@ -183,9 +186,9 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
         return false;
     }
 
-    uint8_t saved_colors_count = hsv_editor_rgb_get_last_free_idx();
+    uint8_t saved_colors_count = hsv_editor_rgb_color_storage_get_last_free_idx();
     if (saved_colors_count == 10) {
-        char message[50] = "Saved colors count already at max count 10";
+        char message[50] = "Saved colors count already at max count 10\r\n";
         cli_set_message(message, strlen(message));
         return false;
     }
@@ -204,7 +207,7 @@ static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t ar
     //shorten long names like lg_st_blue
     const uint8_t input_max_len = 36;
     if (strlen(input) > input_max_len) {
-        char message[30] = "Color name is too long";
+        char message[30] = "Color name is too long\r\n";
         cli_set_message(message, strlen(message));
         return false;
     }
@@ -252,7 +255,7 @@ static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t ar
 static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_idx) {
     char color_name[10];
     string_utils_substring_to_end(input, args_start_idx + 1, color_name);
-    rgb_t color = hsv_editor_rgb_color_get_color_by_name(color_name);
+    rgb_t color = hsv_editor_rgb_color_storage_get_color_by_name(color_name);
     if (color.red == 0 && color.green == 0 && color.blue == 0) {
         char message[50] = "There is no color with name ";
         strcat(message, color_name);
@@ -277,7 +280,7 @@ static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_i
 static bool s_cli_functions_del_color_proceed_(const char* input, uint8_t args_start_idx) {
     char color_name[10];
     string_utils_substring_to_end(input, args_start_idx + 1, color_name);
-    rgb_t color = hsv_editor_rgb_color_get_color_by_name(color_name);
+    rgb_t color = hsv_editor_rgb_color_storage_get_color_by_name(color_name);
     if (color.red == 0 && color.green == 0 && color.blue == 0) {
         char message[50] = "There is no color with name ";
         strcat(message, color_name);
@@ -289,7 +292,7 @@ static bool s_cli_functions_del_color_proceed_(const char* input, uint8_t args_s
 
     bool is_deleted = hsv_editor_nvm_delete_color(color_name);
     if (!is_deleted) {
-        char message[30] = "NVM deletion error";
+        char message[30] = "NVM deletion error\r\n";
         cli_set_message(message, strlen(message));
         return true;
     }
@@ -307,7 +310,7 @@ static bool s_cli_functions_add_current_color_(const char* input, uint8_t args_s
 
     const uint8_t input_max_len = 28;
     if (strlen(input) > input_max_len) {
-        char message[30] = "Color name is too long";
+        char message[30] = "Color name is too long\r\n";
         cli_set_message(message, strlen(message));
         return false;
     }
