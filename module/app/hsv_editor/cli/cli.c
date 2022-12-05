@@ -292,6 +292,7 @@ static bool s_cli_functions_del_color_proceed_(const char* input, uint8_t args_s
     bool is_deleted = hsv_editor_nvm_delete_color(color_name);
     if (!is_deleted) {
         char message[30] = "NVM deletion error";
+        cli_set_message(message, strlen(message));
         return true;
     }
 

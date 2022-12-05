@@ -24,6 +24,6 @@ void hsv_editor_nvm_mark_for_deletion_rgb_storage_entry(char* color_name, uint16
 
 bool hsv_editor_save_color_with_color_name(char* message);
 
-void hsv_editor_nvm_delete_color(char* color_name);
+bool hsv_editor_nvm_delete_color(char* color_name);
 
 #endif /* MODULE_APP_HSV_EDITOR_NVM */

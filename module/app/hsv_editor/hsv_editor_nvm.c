@@ -195,6 +195,7 @@ void hsv_editor_nvm_mark_for_deletion_rgb_storage_entry(char* color_name, uint16
     *idx = -1;
 }
 
+//TODO: restore old actual data when page erased
 bool hsv_editor_save_color_with_color_name(char* message) {
     uint32_t array[130];
     uint8_t len;
@@ -224,8 +225,11 @@ bool hsv_editor_nvm_delete_color(char* color_name) {
     if (delete_idx == -1) {
         return false;
     }
+    
     uint32_t* p = (uint32_t*) (NAMED_COLORS_SPACE_ADDR);
     p += delete_idx;
     uint32_t addr = (uint32_t) p;
     nrfx_nvmc_word_write(addr, LABEL_MARKED_FOR_DELETION);
+
+    return true;
 }

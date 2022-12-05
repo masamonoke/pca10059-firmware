@@ -18,20 +18,14 @@ void nvm_write_values(nvm_instance_t* instance, uint32_t* values, uint16_t len) 
         instance->p_addr = (uint32_t*) instance->cur_addr;
     }
 
-    if (instance->cur_addr >= instance->page + PAGE_SIZE) {
-        instance->cur_addr = instance->page;
-        instance->p_addr = (uint32_t*) instance->cur_addr;
-        nrf_nvmc_page_erase(instance->cur_addr);
-    } else {
-        for (size_t i = 0; i < len; i++) {
-            if (nrfx_nvmc_word_writable_check(instance->cur_addr, values[i])) {
-                nrf_nvmc_write_word(instance->cur_addr, values[i]);
-                if (nrfx_nvmc_write_done_check()) {
-                    NRF_LOG_INFO("Value is saved");
-                }
-                instance->p_addr++;
-                instance->cur_addr = (uint32_t) instance->p_addr;
+    for (size_t i = 0; i < len; i++) {
+        if (nrfx_nvmc_word_writable_check(instance->cur_addr, values[i])) {
+            nrf_nvmc_write_word(instance->cur_addr, values[i]);
+            if (nrfx_nvmc_write_done_check()) {
+                NRF_LOG_INFO("Value is saved");
             }
+            instance->p_addr++;
+            instance->cur_addr = (uint32_t) instance->p_addr;
         }
     }
 }
