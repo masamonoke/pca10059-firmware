@@ -18,22 +18,14 @@ static void s_clear_message_(void) {
     memset(s_message_, '\0', MESSAGE_SIZE * sizeof(char));
 }
 
-void cli_set_message(char* str, uint16_t len) {
+void cli_set_message(const char* str) {
     s_clear_message_();
-    size_t i;
-    for (i = 0; i < len; i++) {
-        s_message_[i] = str[i];
-    }
-    s_message_[i] = '\0';
+    strcpy(s_message_, str);
     s_is_message_ = true;
 }
 
 void cli_get_message(char* str) {
-    size_t i = 0;
-    while (s_message_[i] != '\0') {
-        str[i] = s_message_[i];
-        i++;
-    }
+    strcpy(str, s_message_);
     s_is_message_ = false;
 }
 
@@ -43,7 +35,7 @@ bool cli_is_there_message(void) {
 
 static void s_cli_functions_undefined_command_(void) {
     char message[] = "Undefined command\r\n";
-    cli_set_message(message, strlen(message));
+    cli_set_message(message);
     NRF_LOG_INFO("Undefined command");
 }
 
@@ -98,13 +90,14 @@ static void s_prepare_message_(const uint16_t* vals, uint16_t vals_count,
     message[cur_idx++] = '\n';
     message[cur_idx] = '\0';
 
-    cli_set_message(message, strlen(message));
+    cli_set_message(message);
+    NRF_LOG_INFO("%s", message);
 }
 
-#define RGB_VALUES_SIZE 3
 static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_idx) {
-    uint16_t args[RGB_VALUES_SIZE];
-    if (!s_get_args_(input, args_start_idx, args, RGB_VALUES_SIZE)) {
+    const uint8_t args_count = 3;
+    uint16_t args[args_count];
+    if (!s_get_args_(input, args_start_idx, args, args_count)) {
         return false;
     }
     args[0] = math_utils_clamp_int(args[0], 255, 0);
@@ -125,8 +118,7 @@ static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_i
     hsv_t hsv_obj = converter_to_hsv_from_rgb(rgb_obj);
     hsv_editor_set_hsv_object(hsv_obj.hue, hsv_obj.saturation, hsv_obj.value);
     char message_part[] = "Color set to ";
-    s_prepare_message_(vals, 3, message_part, strlen(message_part), chars);
-    NRF_LOG_INFO("Color set to R=%d G=%d B=%d", r, g, b);
+    s_prepare_message_(vals, args_count, message_part, strlen(message_part), chars);
 
     hsv_editor_set_is_nvm_write_time(true);
 
@@ -134,8 +126,9 @@ static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_i
 }
 
 static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_idx) {
-    uint16_t args[3];
-    if (!s_get_args_(input, args_start_idx, args, 3)) {
+    const uint8_t args_count = 3;
+    uint16_t args[args_count];
+    if (!s_get_args_(input, args_start_idx, args, args_count)) {
         return false;
     }
 
@@ -149,11 +142,11 @@ static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_i
 
     nordic_rgb_pwm_set_hsv_color(h, s, v);
 
-    
     char chars[] = "HSV";
     uint16_t vals[] = { h, s, v };
     hsv_editor_set_hsv_object(h, s, v);
-    s_prepare_message_(vals, 3, "Color set to ", 13, chars);
+    char message_part[] = "Color set to ";
+    s_prepare_message_(vals, args_count, message_part, strlen(message_part), chars);
     NRF_LOG_INFO("Color set to H=%d S=%d V=%d", h, s, v);
 
     hsv_editor_set_is_nvm_write_time(true);
@@ -163,8 +156,8 @@ static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_i
 
 static void s_prepare_help_message_(void) {
     char message[] = "RGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp\r\n";
-    //TODO: fix
-    cli_set_message(message, 64);
+    cli_set_message(message);
+    NRF_LOG_INFO("\r\nRGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp");
 }
 
 static bool s_cli_functions_help_proceed_(const char* input, uint8_t args_start_idx) {
@@ -173,7 +166,6 @@ static bool s_cli_functions_help_proceed_(const char* input, uint8_t args_start_
     }
 
     s_prepare_help_message_();
-    NRF_LOG_INFO("\nRGB <red> <green> <blue>\nHSV <hur> <saturation> <value>\nhelp");
 
     return true;
 }
@@ -182,19 +174,22 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
     bool res = hsv_editor_rgb_color_storage_add_color(r, g, b, color_name);
     if (!res) {
         char message[] = "Color with that name is already saved\r\n";
-        cli_set_message(message, strlen(message));
+        NRF_LOG_INFO("%s", message);
+        cli_set_message(message);
         return false;
     }
 
     uint8_t saved_colors_count = hsv_editor_rgb_color_storage_get_last_free_idx();
     if (saved_colors_count == 10) {
         char message[50] = "Saved colors count already at max count 10\r\n";
-        cli_set_message(message, strlen(message));
+        NRF_LOG_INFO("%s", message);
+        cli_set_message(message);
         return false;
     }
 
     bool is_saved = hsv_editor_save_added_colors();
     if (!is_saved) {
+        NRF_LOG_INFO("Cannot save color");
         return false;
     } 
 
@@ -208,7 +203,7 @@ static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t ar
     const uint8_t input_max_len = 36;
     if (strlen(input) > input_max_len) {
         char message[30] = "Color name is too long\r\n";
-        cli_set_message(message, strlen(message));
+        cli_set_message(message);
         return false;
     }
 
@@ -247,7 +242,7 @@ static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t ar
     strcat(message, color_name);
     char tmp[] = " saved to storage\r\n";
     strcat(message, tmp);
-    cli_set_message(message, strlen(message));
+    cli_set_message(message);
 
     return true;
 }
@@ -261,7 +256,7 @@ static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_i
         strcat(message, color_name);
         char tmp[] = "\r\n";
         strcat(message, tmp);
-        cli_set_message(message, strlen(message));
+        cli_set_message(message);
         return true;
     }
     hsv_t hsv_color = converter_to_hsv_from_rgb(color);
@@ -270,7 +265,7 @@ static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_i
     strcat(message, color_name);
     char tmp[] = "\r\n";
     strcat(message, tmp);
-    cli_set_message(message, strlen(message));
+    cli_set_message(message);
 
     hsv_editor_set_is_nvm_write_time(true);
 
@@ -286,14 +281,14 @@ static bool s_cli_functions_del_color_proceed_(const char* input, uint8_t args_s
         strcat(message, color_name);
         char tmp[] = "\r\n";
         strcat(message, tmp);
-        cli_set_message(message, strlen(message));
+        cli_set_message(message);
         return true;
     }
 
     bool is_deleted = hsv_editor_nvm_delete_color(color_name);
     if (!is_deleted) {
         char message[30] = "NVM deletion error\r\n";
-        cli_set_message(message, strlen(message));
+        cli_set_message(message);
         return true;
     }
 
@@ -302,7 +297,7 @@ static bool s_cli_functions_del_color_proceed_(const char* input, uint8_t args_s
     strcat(message, color_name);
     char tmp[] = " deleted\r\n";
     strcat(message, tmp);
-    cli_set_message(message, strlen(message));
+    cli_set_message(message);
     return true;
 }
 
@@ -311,7 +306,7 @@ static bool s_cli_functions_add_current_color_(const char* input, uint8_t args_s
     const uint8_t input_max_len = 28;
     if (strlen(input) > input_max_len) {
         char message[30] = "Color name is too long\r\n";
-        cli_set_message(message, strlen(message));
+        cli_set_message(message);
         return false;
     }
 
@@ -329,7 +324,7 @@ static bool s_cli_functions_add_current_color_(const char* input, uint8_t args_s
     strcat(message, color_name);
     char tmp[] = " saved\r\n";
     strcat(message, tmp);
-    cli_set_message(message, strlen(message));
+    cli_set_message(message);
     return true;
 }
 
@@ -370,7 +365,7 @@ static command_obj_t s_commands_[] = {
     }
 };
 
-static void s_define_command_(const char* command_str, const char* input, const size_t args_start_idx) {
+static void s_select_command_(const char* command_str, const char* input, const size_t args_start_idx) {
     for (uint16_t com_idx = 0; com_idx < ARRAY_LEN(s_commands_); com_idx++) {
         if (string_utils_compare_string(s_commands_[com_idx].command, command_str)) {
             if (!s_commands_[com_idx].command_func(input, args_start_idx)) {
@@ -383,7 +378,7 @@ static void s_define_command_(const char* command_str, const char* input, const 
     s_cli_functions_undefined_command_();
 }
 
-void cli_proceed(char* input) {
+void cli_proceed(const char* input) {
     size_t i = 0;
     char command[COMMAND_STR_LEN];
     while (input[i] != ' ' && input[i] != '\0') {
@@ -398,5 +393,5 @@ void cli_proceed(char* input) {
     command[i] = '\0';
     string_utils_to_lower_case(command);
 
-    s_define_command_(command, input, i);
+    s_select_command_(command, input, i);
 }

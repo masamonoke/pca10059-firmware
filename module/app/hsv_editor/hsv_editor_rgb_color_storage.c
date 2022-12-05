@@ -21,20 +21,20 @@ static bool s_is_name_unique_(char* color_name) {
 
 bool hsv_editor_rgb_color_storage_add_color(uint8_t r, uint8_t g, uint8_t b, char* color_name) {
     if (s_cur_free_idx_ == 10) {
-        cli_set_message("Color storage is more than 10. Delete unwanted colors to free space\r\n", 69);
+        cli_set_message("Color storage is more than 10. Delete unwanted colors to free space\r\n");
         NRF_LOG_INFO("Color storage is more than 10. Delete unwanted colors to free space");
         return false;
     }
 
     uint8_t len = strlen(color_name);
     if (len > 10) {
-        cli_set_message("Too long color name\r\n", 21);
+        cli_set_message("Too long color name\r\n");
         NRF_LOG_INFO("Too long color name");
         return false;
     }
 
     if (!s_is_name_unique_(color_name)) {
-        cli_set_message("There is already color with the same name\r\n", 43);
+        cli_set_message("There is already color with the same name\r\n");
         NRF_LOG_INFO("There is already color with the same name");
         return false;
     }

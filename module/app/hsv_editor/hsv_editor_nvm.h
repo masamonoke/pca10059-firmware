@@ -22,7 +22,6 @@ void hsv_editor_nvm_restore_previous_rgb_storage(rgb_t* colors, char color_names
 
 void hsv_editor_nvm_mark_for_deletion_rgb_storage_entry(char* color_name, uint16_t* idx);
 
-//TODO: rename to hsv_editor_save_added_colors
 bool hsv_editor_save_added_colors(void);
 
 bool hsv_editor_nvm_delete_color(char* color_name);

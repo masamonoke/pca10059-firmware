@@ -16,7 +16,7 @@ static nvm_instance_t s_color_save_instance_;
 static bool s_is_init_ = false;
 void hsv_editor_nvm_init(void) {
     if (!s_is_init_) {
-        nvm_init_instance(&s_color_save_instance_, SAVED_SET_COLOR_SPACE_ADDR);
+        nvm_reset_instance(&s_color_save_instance_, SAVED_SET_COLOR_SPACE_ADDR);
         s_is_init_ = true;
     }
 }
@@ -223,7 +223,7 @@ bool hsv_editor_save_added_colors(void) {
         hsv_editor_nvm_restore_previous_rgb_storage(restored_colors, restored_color_names, &restored_entries_count);
 
         nvm_instance_t color_names_inst;
-        nvm_init_instance(&color_names_inst, NAMED_COLORS_SPACE_ADDR);
+        nvm_reset_instance(&color_names_inst, NAMED_COLORS_SPACE_ADDR);
         if (restored_entries_count > 0 && *(color_names_inst.p_addr - 1) != LABEL_MARKED_FOR_DELETION) {
             color_names_inst.p_addr++;
         }

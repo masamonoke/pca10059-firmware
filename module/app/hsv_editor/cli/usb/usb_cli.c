@@ -82,10 +82,11 @@ static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_ac
         do {
             if (s_rx_buffer_[0] == '\r' || s_rx_buffer_[0] == '\n') {
                 s_buff_[s_cur_buf_idx_ - 1] = '\0';
+                NRF_LOG_INFO("%s", s_buff_);
                 if (hsv_editor_is_edit_completed()) {
                     cli_proceed(s_buff_);
                 } else {
-                    cli_set_message("PWM module is locked by user\r\n", 30);
+                    cli_set_message("PWM module is locked by user\r\n");
                 }
                 s_clean_buffer_();
                 ret = app_usbd_cdc_acm_write(&usb_cdc_acm, "\r\n", 2);

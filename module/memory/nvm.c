@@ -2,7 +2,7 @@
 #include "nrfx_nvmc.h"
 #include "nrf_log.h"
 
-void nvm_init_instance(nvm_instance_t* instance, uint32_t page) {
+void nvm_reset_instance(nvm_instance_t* instance, uint32_t page) {
     instance->page = page;
     instance->cur_addr = instance->page;
     instance->p_addr = (uint32_t*) instance->cur_addr;
