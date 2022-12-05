@@ -14,12 +14,9 @@ static char s_message_[MESSAGE_SIZE];
 static bool s_is_message_ = false;
 
 static void s_clear_message_(void) {
-    for (size_t i = 0; i < MESSAGE_SIZE; i++) {
-        s_message_[i] = '\0';
-    }
+    memset(s_message_, '\0', MESSAGE_SIZE * sizeof(char));
 }
 
-//TODO: remove set len
 void cli_set_message(char* str, uint16_t len) {
     s_clear_message_();
     size_t i;
@@ -53,11 +50,7 @@ static bool s_get_args_(const char* input, uint16_t start_idx, uint16_t* args, u
     char s[MAX_ARGS_STR_LEN];
     string_utils_substring_to_end(input, start_idx + 1, s);
 
-    return string_utils_parse_string_get_nums(s, args, 3);
-}
-
-static void s_prepare_help_message_(void) {
-    cli_set_message("RGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp\r\n", 64);
+    return string_utils_parse_string_get_nums(s, args, args_count);
 }
 
 static uint8_t s_get_num_len_(uint16_t num) {
@@ -131,6 +124,8 @@ static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_i
     s_prepare_message_(vals, 3, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to R=%d G=%d B=%d", r, g, b);
 
+    hsv_editor_set_is_nvm_write_time(true);
+
     return true;
 }
 
@@ -157,7 +152,14 @@ static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_i
     s_prepare_message_(vals, 3, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to H=%d S=%d V=%d", h, s, v);
 
+    hsv_editor_set_is_nvm_write_time(true);
+
     return true;
+}
+
+static void s_prepare_help_message_(void) {
+    char message[] = "RGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp\r\n\0";
+    cli_set_message(message, strlen(message));
 }
 
 static bool s_cli_functions_help_proceed_(const char* input, uint8_t args_start_idx) {
