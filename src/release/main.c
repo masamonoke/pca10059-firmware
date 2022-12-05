@@ -37,14 +37,14 @@ int main(void) {
         initial_hue = buf[0];
         initial_satur = buf[1];
         initial_value = buf[2];
-        NRF_LOG_INFO("Restored previous set color %d %d %d", initial_hue, inital_satur, initial_value);
+        NRF_LOG_INFO("Restored previous set color %d %d %d", initial_hue, initial_satur, initial_value);
     } else {
         initial_hue = (uint16_t) ceilf(360.f * LAST_ID_DIGITS / 100.f);
         initial_satur = 100;
         initial_value = 100;
     }
 
-    hsv_editor_set_hsv(initial_hue, initial_satur, initial_value);
+    hsv_editor_set_hsv_object(initial_hue, initial_satur, initial_value);
 
     while(true) {
         hsv_editor_change_color();

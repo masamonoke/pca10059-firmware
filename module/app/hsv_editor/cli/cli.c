@@ -123,7 +123,7 @@ static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_i
         .green = g
     };
     hsv_t hsv_obj = converter_to_hsv_from_rgb(rgb_obj);
-    hsv_editor_set_hsv(hsv_obj.hue, hsv_obj.saturation, hsv_obj.value);
+    hsv_editor_set_hsv_object(hsv_obj.hue, hsv_obj.saturation, hsv_obj.value);
     char message_part[] = "Color set to ";
     s_prepare_message_(vals, 3, message_part, strlen(message_part), chars);
     NRF_LOG_INFO("Color set to R=%d G=%d B=%d", r, g, b);
@@ -152,7 +152,7 @@ static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_i
     
     char chars[] = "HSV";
     uint16_t vals[] = { h, s, v };
-    hsv_editor_set_hsv(h, s, v);
+    hsv_editor_set_hsv_object(h, s, v);
     s_prepare_message_(vals, 3, "Color set to ", 13, chars);
     NRF_LOG_INFO("Color set to H=%d S=%d V=%d", h, s, v);
 
@@ -265,7 +265,7 @@ static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_i
         return true;
     }
     hsv_t hsv_color = converter_to_hsv_from_rgb(color);
-    hsv_editor_set_hsv(hsv_color.hue, hsv_color.saturation, hsv_color.value);
+    hsv_editor_set_hsv_object(hsv_color.hue, hsv_color.saturation, hsv_color.value);
     char message[30] = "PWM color set to ";
     strcat(message, color_name);
     char tmp[] = "\r\n";

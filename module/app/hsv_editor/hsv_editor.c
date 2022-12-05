@@ -204,7 +204,7 @@ void hsv_editor_change_color(void) {
     }
 }
 
-void hsv_editor_set_hsv(uint16_t h, uint8_t s, uint8_t v) {
+void hsv_editor_set_hsv_object(uint16_t h, uint8_t s, uint8_t v) {
     s_hsv_data_ = converter_get_hsv_data(h, s, v);
     nordic_rgb_pwm_set_hsv_color(s_hsv_data_.hue, s_hsv_data_.saturation, s_hsv_data_.value);
 }

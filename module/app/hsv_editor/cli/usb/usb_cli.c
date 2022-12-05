@@ -40,8 +40,7 @@ void usb_cli_init(app_usbd_cdc_acm_t instance) {
 }
 
 void usb_cli_process(void) {
-    while (app_usbd_event_queue_process()) {
-    }
+    while (app_usbd_event_queue_process()) {}
 }
 
 static char s_buff_[BUFF_SIZE];
