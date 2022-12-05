@@ -2,6 +2,7 @@
 #include "module/io/gpio_utils.h"
 #include "nrf_log.h"
 #include "../cli.h"
+#include "module/app/hsv_editor/hsv_editor.h"
 
 #define READ_SIZE 1
 
@@ -31,7 +32,6 @@ static bool s_is_init_ = false;
 
 void usb_cli_init(app_usbd_cdc_acm_t instance) {
     if (!s_is_init_) {
-        gpio_utils_init();
         s_is_init_ = true;
         app_usbd_class_inst_t const* class_cdc_acm = app_usbd_cdc_acm_class_inst_get(&usb_cdc_acm);
         ret_code_t ret = app_usbd_class_append(class_cdc_acm);
@@ -57,14 +57,14 @@ static void s_clean_buffer_(void) {
 static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_acm_user_event_t event) {
     switch (event) {
     case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN: {
+        NRF_LOG_INFO("Opened USB port");
         ret_code_t ret;
-        gpio_utils_turn_on_led(LED_YELLOW);
         ret = app_usbd_cdc_acm_read(&usb_cdc_acm, s_rx_buffer_, READ_SIZE);
         UNUSED_VARIABLE(ret);
         break;
     }
     case APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE: {
-        gpio_utils_turn_off_led(LED_YELLOW);
+        NRF_LOG_INFO("Closed USB port");
         break;
     }
     case APP_USBD_CDC_ACM_USER_EVT_TX_DONE: {
@@ -83,7 +83,11 @@ static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_ac
         do {
             if (s_rx_buffer_[0] == '\r' || s_rx_buffer_[0] == '\n') {
                 s_buff_[s_cur_buf_idx_ - 1] = '\0';
-                cli_proceed(s_buff_);
+                if (hsv_editor_is_edit_completed()) {
+                    cli_proceed(s_buff_);
+                } else {
+                    cli_set_message("PWM module is locked by user\r\n", 30);
+                }
                 s_clean_buffer_();
                 ret = app_usbd_cdc_acm_write(&usb_cdc_acm, "\r\n", 2);
             } else {

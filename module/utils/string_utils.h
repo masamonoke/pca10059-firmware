@@ -17,4 +17,6 @@ void string_utils_to_lower_case(char *str);
 
 void string_utils_to_upper_case(char *str);
 
+void string_utils_reverse(char * str);
+
 #endif /* MODULE_UTILS_STRING_UTILS */
