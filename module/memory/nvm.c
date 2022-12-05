@@ -10,12 +10,14 @@ void nvm_init_instance(nvm_instance_t* instance, uint32_t page) {
     instance->cur_addr = (uint32_t) instance->p_addr;
 }
 
-void nvm_write_values(nvm_instance_t* instance, uint32_t* values, uint16_t len) {
+bool nvm_write_values(nvm_instance_t* instance, uint32_t* values, uint16_t len) {
+    bool is_erased = false;
     instance->cur_addr = (uint32_t) instance->p_addr;
     if (instance->cur_addr + (4 * len) > instance->page + PAGE_SIZE) {
         nrf_nvmc_page_erase(instance->page);
         instance->cur_addr = instance->page;
         instance->p_addr = (uint32_t*) instance->cur_addr;
+        is_erased = true;
     }
 
     for (size_t i = 0; i < len; i++) {
@@ -28,6 +30,8 @@ void nvm_write_values(nvm_instance_t* instance, uint32_t* values, uint16_t len) 
             instance->cur_addr = (uint32_t) instance->p_addr;
         }
     }
+
+    return is_erased;
 }
 
 void nvm_read_last_data(nvm_instance_t* instance, uint32_t* buf, uint16_t len) {

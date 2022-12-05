@@ -16,7 +16,7 @@ typedef struct {
 
 void nvm_init_instance(nvm_instance_t* instance, uint32_t page);
 
-void nvm_write_values(nvm_instance_t* instance, uint32_t* values, uint16_t len);
+bool nvm_write_values(nvm_instance_t* instance, uint32_t* values, uint16_t len);
 
 void nvm_read_last_data(nvm_instance_t* instance, uint32_t* buf, uint16_t len);
 

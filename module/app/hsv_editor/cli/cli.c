@@ -11,7 +11,6 @@
 
 #define MESSAGE_SIZE 150
 static char s_message_[MESSAGE_SIZE];
-static uint16_t s_len_;
 static bool s_is_message_ = false;
 
 static void s_clear_message_(void) {
@@ -20,7 +19,7 @@ static void s_clear_message_(void) {
     }
 }
 
-//TODO: remove len
+//TODO: remove set len
 void cli_set_message(char* str, uint16_t len) {
     s_clear_message_();
     size_t i;
@@ -29,16 +28,14 @@ void cli_set_message(char* str, uint16_t len) {
     }
     s_message_[i] = '\0';
     s_is_message_ = true;
-    s_len_ = len;
 }
 
-void cli_get_message(char* str, uint16_t* len) {
+void cli_get_message(char* str) {
     size_t i = 0;
     while (s_message_[i] != '\0') {
         str[i] = s_message_[i];
         i++;
     }
-    *len = s_len_;
     s_is_message_ = false;
 }
 
@@ -81,8 +78,9 @@ static void s_prepare_message_(const uint16_t* vals, uint16_t vals_count,
 
     s_clear_message_();
 
+    char message[130];
     for (size_t i = 0; i < mes_len; i++) {
-        s_message_[i] = start_of_message[i];
+        message[i] = start_of_message[i];
     }
 
     uint8_t len;
@@ -92,21 +90,20 @@ static void s_prepare_message_(const uint16_t* vals, uint16_t vals_count,
     for (size_t val_idx = 0; val_idx < vals_count; val_idx++) {
         len = s_get_num_len_(vals[val_idx]);
         sprintf(num, "%d", vals[val_idx]);
-        s_message_[cur_idx++] = chars[val_idx];
-        s_message_[cur_idx++] = '=';
+        message[cur_idx++] = chars[val_idx];
+        message[cur_idx++] = '=';
         for (size_t i = cur_idx, k = 0; i < cur_idx + len; i++, k++) {
-            s_message_[i] = num[k];
+            message[i] = num[k];
         }
         cur_idx += len;
-        s_message_[cur_idx++] = ' ';
+        message[cur_idx++] = ' ';
     }
 
-    s_message_[cur_idx++] = '\r';
-    s_message_[cur_idx++] = '\n';
-    s_message_[cur_idx] = '\0';
+    message[cur_idx++] = '\r';
+    message[cur_idx++] = '\n';
+    message[cur_idx] = '\0';
 
-    s_len_ = cur_idx;
-    s_is_message_ = true;
+    cli_set_message(message, strlen(message));
 }
 
 static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_idx) {
@@ -189,10 +186,8 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
         return false;
     }
 
-    char save_res_message[50];
-    bool is_saved = hsv_editor_save_color_with_color_name(save_res_message);
+    bool is_saved = hsv_editor_save_added_colors();
     if (!is_saved) {
-        cli_set_message(save_res_message, strlen(save_res_message));
         return false;
     } 
 
@@ -202,7 +197,6 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
 static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t args_start_idx) {
 
     //e.g. add_rgb_color 176 196 222 light_steel_blue is not allowed because of too long color name
-    //TODO: check
     //shorten long names like lg_st_blue
     const uint8_t input_max_len = 36;
     if (strlen(input) > input_max_len) {

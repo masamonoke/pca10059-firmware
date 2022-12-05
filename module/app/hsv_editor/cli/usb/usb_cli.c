@@ -70,8 +70,8 @@ static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_ac
     case APP_USBD_CDC_ACM_USER_EVT_TX_DONE: {
         if (cli_is_there_message()) {
             char message[MESSAGE_SIZE];
-            uint16_t len;
-            cli_get_message(message, &len);
+            cli_get_message(message);
+            uint16_t len = strlen(message);
             app_usbd_cdc_acm_write(&usb_cdc_acm, message, len);
         }
         break;
