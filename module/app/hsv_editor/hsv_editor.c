@@ -189,6 +189,7 @@ static bool s_is_init_ = false;
 void hsv_editor_init(void) {
     if (!s_is_init_) {
         init();
+        hsv_editor_nvm_init();
         s_is_init_ = true;
     }
 }
