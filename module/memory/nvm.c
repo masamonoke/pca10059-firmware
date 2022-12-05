@@ -2,8 +2,6 @@
 #include "nrfx_nvmc.h"
 #include "nrf_log.h"
 
-#define ERASED_WORD -1
-
 void nvm_init_instance(nvm_instance_t* instance, uint32_t page) {
     instance->page = page;
     instance->cur_addr = instance->page;
@@ -13,6 +11,7 @@ void nvm_init_instance(nvm_instance_t* instance, uint32_t page) {
 }
 
 void nvm_write_values(nvm_instance_t* instance, uint32_t* values, uint16_t len) {
+    instance->cur_addr = (uint32_t) instance->p_addr;
     if (instance->cur_addr + (4 * len) > instance->page + PAGE_SIZE) {
         nrf_nvmc_page_erase(instance->page);
         instance->cur_addr = instance->page;
@@ -63,5 +62,15 @@ void nvm_set_ptr_to_start(nvm_instance_t* instance) {
 void nvm_set_ptr_to_last_elem(nvm_instance_t* instance) {
     while (*(instance->p_addr) != ERASED_WORD) {
         instance->p_addr++;
+        if (*(instance->p_addr + 1) != ERASED_WORD) {
+            instance->p_addr++;
+        }
     }
+}
+
+void nvm_set_ptr_to_last_label(nvm_instance_t* instance, uint32_t label) {
+    while (*(instance->p_addr) != label) {
+        instance->p_addr++;
+    }
+    instance->p_addr++;
 }

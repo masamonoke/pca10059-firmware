@@ -5,6 +5,8 @@
 #include "module/io/led/nordic_rgb_pwm_utils.h"
 #include "module/io/led/led_soft_pwm.h"
 #include "module/io/button.h"
+#include "module/app/hsv_editor/hsv_editor_rgb_color_storage.h"
+#include "module/app/hsv_editor/hsv_editor_nvm.h"
 
 #define MODE_COUNT 4
 #define MODE_DENOTING_LED LED_YELLOW
@@ -146,6 +148,17 @@ void double_click_handler() {
     s_define_status_led_behavior_();
 }
 
+static void s_restore_previous_session_(void) {
+    rgb_t restored_colors[COLORS_ENTRY_SIZE];
+    char restored_color_names[COLORS_ENTRY_SIZE][COLORS_ENTRY_SIZE];
+    uint8_t restored_entries_count;
+    hsv_editor_nvm_restore_previous_rgb_storage(restored_colors, restored_color_names, &restored_entries_count);
+    if (restored_entries_count != 0) {
+        hsv_editor_rgb_color_set_names(restored_color_names, restored_entries_count);
+        hsv_editor_rgb_color_set_colors(restored_colors, restored_entries_count);
+    }
+}
+
 static void init(void) {
     app_timer_init();
     nordic_usb_logging_init();
@@ -168,6 +181,8 @@ static void init(void) {
     s_mode_led_behavior_ = s_mode_led_turn_off_;
 
     s_is_changing_color_ = false;
+    
+    s_restore_previous_session_();
 } 
 
 static bool s_is_init_ = false;

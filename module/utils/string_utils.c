@@ -1,4 +1,5 @@
 #include "string_utils.h"
+#include <string.h>
 
 bool string_utils_compare_string(const char* s1, const char*s2) {
     size_t i = 0;
@@ -96,5 +97,31 @@ void string_utils_to_upper_case(char *str) {
             *str = (char) (*str - 32);
         }
         str++;
+    }
+}
+
+// reverse the given null-terminated string in place
+void string_utils_reverse(char * str) {
+    if (str) {
+        char * end = str + strlen(str) - 1;
+
+        // swap the values in the two given variables
+        // XXX: fails when a and b refer to same memory location
+# define XOR_SWAP(a,b) \
+    do {\
+    \
+      a ^= b;\
+      b ^= a;\
+      a ^= b;\
+    } while (0)
+
+        // walk inwards from both ends of the string,
+        // swapping until we get to the middle
+        while (str < end) {
+            XOR_SWAP(*str, *end);
+            str++;
+            end--;
+        }
+#undef XOR_SWAP
     }
 }

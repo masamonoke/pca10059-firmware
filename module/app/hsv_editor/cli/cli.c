@@ -7,6 +7,7 @@
 #include "module/utils/array_utils.h"
 #include "../hsv_editor_rgb_color_storage.h"
 #include "string.h"
+#include "../hsv_editor_nvm.h"
 
 #define MESSAGE_SIZE 150
 static char s_message_[MESSAGE_SIZE];
@@ -173,8 +174,43 @@ static bool s_cli_functions_help_proceed_(const char* input, uint8_t args_start_
     return true;
 }
 
-//TODO: debug
+static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color_name) {
+    bool res = hsv_editor_rgb_color_storage_add_color(r, g, b, color_name);
+    if (!res) {
+        char message[] = "Color with that name is already saved\r\n";
+        cli_set_message(message, strlen(message));
+        return false;
+    }
+
+    uint8_t saved_colors_count = hsv_editor_rgb_get_last_free_idx();
+    if (saved_colors_count == 10) {
+        char message[50] = "Saved colors count already at max count 10";
+        cli_set_message(message, strlen(message));
+        return false;
+    }
+
+    char save_res_message[50];
+    bool is_saved = hsv_editor_save_color_with_color_name(save_res_message);
+    if (!is_saved) {
+        cli_set_message(save_res_message, strlen(save_res_message));
+        return false;
+    } 
+
+    return true;
+}
+
 static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t args_start_idx) {
+
+    //e.g. add_rgb_color 176 196 222 light_steel_blue is not allowed because of too long color name
+    //TODO: check
+    //shorten long names like lg_st_blue
+    const uint8_t input_max_len = 36;
+    if (strlen(input) > input_max_len) {
+        char message[30] = "Color name is too long";
+        cli_set_message(message, strlen(message));
+        return false;
+    }
+
     uint8_t str_len = strlen(input);
     uint8_t space_count = 0;
     size_t i;
@@ -201,10 +237,8 @@ static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t ar
     char color_name[10];
     string_utils_substring_to_end(input, i + 1, color_name);
 
-    bool res = hsv_editor_rgb_color_storage_add_color(r, g, b, color_name);
-    if (!res) {
-        char message[] = "Color with that name is already saved\r\n";
-        cli_set_message(message, strlen(message));
+    bool is_saved = s_save_color_with_name_(r, g, b, color_name);
+    if (!is_saved) {
         return true;
     }
 
@@ -213,6 +247,7 @@ static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t ar
     char tmp[] = " saved to storage\r\n";
     strcat(message, tmp);
     cli_set_message(message, strlen(message));
+
     return true;
 }
 
@@ -235,6 +270,9 @@ static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_i
     char tmp[] = "\r\n";
     strcat(message, tmp);
     cli_set_message(message, strlen(message));
+
+    hsv_editor_set_is_nvm_write_time(true);
+
     return true;
 }
 
@@ -251,6 +289,12 @@ static bool s_cli_functions_del_color_proceed_(const char* input, uint8_t args_s
         return true;
     }
 
+    bool is_deleted = hsv_editor_nvm_delete_color(color_name);
+    if (!is_deleted) {
+        char message[30] = "NVM deletion error";
+        return true;
+    }
+
     hsv_editor_rgb_color_storage_delete(color_name);
     char message[30] = "Color ";
     strcat(message, color_name);
@@ -261,12 +305,24 @@ static bool s_cli_functions_del_color_proceed_(const char* input, uint8_t args_s
 }
 
 static bool s_cli_functions_add_current_color_(const char* input, uint8_t args_start_idx) {
-    //TODO: check that name is not too long and can be stored
+
+    const uint8_t input_max_len = 28;
+    if (strlen(input) > input_max_len) {
+        char message[30] = "Color name is too long";
+        cli_set_message(message, strlen(message));
+        return false;
+    }
+
     char color_name[10];
     string_utils_substring_to_end(input, args_start_idx + 1, color_name);
     hsv_t hsv = hsv_editor_get_hsv_object();
     rgb_t rgb = converter_to_rgb_from_hsv(hsv);
-    hsv_editor_rgb_color_storage_add_color(rgb.red, rgb.green, rgb.blue, color_name);
+
+    bool is_saved = s_save_color_with_name_(rgb.red, rgb.green, rgb.blue, color_name);
+    if (!is_saved) {
+        return true;
+    }
+    
     char message[30] = "Color ";
     strcat(message, color_name);
     char tmp[] = " saved\r\n";
