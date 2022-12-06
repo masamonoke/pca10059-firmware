@@ -15,6 +15,7 @@ static instance_t* s_stack_;
 #define ERRORS_LEN 255
 static error_t* s_errors_;
 static bool s_is_any_errors = false;
+static bool s_is_error_thrown_ = false;
 
 void runtime_error_init(void) {
     s_stack_ = stack_ctx_alloc_instance(100);
@@ -36,12 +37,25 @@ void runtime_error(const char* m, int p) {
     s_id_counter_++;
     stack_ctx_instance_push(s_stack_, e.id);
     s_is_any_errors = true;
+    s_is_error_thrown_ = true;
 }
 
-void runtime_error_stacktrace(void) {
+bool runtime_error_is_error_just_thrown(void) {
+    bool tmp = s_is_error_thrown_;
+    s_is_error_thrown_ = false;
+    return tmp;
+}
+
+void runtime_error_log_stacktrace(void) {
     uint8_t id;
     while (!stack_ctx_instance_is_empty(s_stack_)) {
         id = stack_ctx_instance_pop(s_stack_);
         NRF_LOG_INFO("%s\n", s_errors_[id].message);
+        id++;
     }
+    s_is_any_errors = false;
+}
+
+bool runtime_error_is_any_error(void) {
+    return s_is_any_errors;
 }

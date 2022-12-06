@@ -6,6 +6,7 @@
 #include "module/app/hsv_editor/hsv_editor.h"
 #include "module/app/hsv_editor/hsv_editor_nvm.h"
 #include "module/app/hsv_editor/cli/usb/usb_cli.h"
+#include "module/error/runtime_error_impl.h"
 
 #include <math.h>
 #include "nrf_log.h"
@@ -58,6 +59,10 @@ int main(void) {
         }
 
         usb_proceed();
+
+        if (runtime_error_is_any_error()) {
+            runtime_error_log_stacktrace();
+        }
 
         nordic_usb_logging_process();
     }

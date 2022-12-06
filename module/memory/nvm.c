@@ -24,7 +24,7 @@ bool nvm_write_values(nvm_instance_t* instance, uint32_t* values, uint16_t len) 
         if (nrfx_nvmc_word_writable_check(instance->cur_addr, values[i])) {
             nrf_nvmc_write_word(instance->cur_addr, values[i]);
             if (nrfx_nvmc_write_done_check()) {
-                NRF_LOG_INFO("Value is saved");
+                NRF_LOG_INFO("NVM: Value is saved %d", values[i]);
             }
             instance->p_addr++;
             instance->cur_addr = (uint32_t) instance->p_addr;

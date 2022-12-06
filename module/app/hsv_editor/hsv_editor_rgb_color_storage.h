@@ -29,6 +29,8 @@ rgb_t hsv_editor_rgb_color_storage_get_color_by_name(char* color_name);
 
 uint8_t hsv_editor_rgb_color_storage_get_last_free_idx(void);
 
+void hsv_editor_rgb_color_storage_set_last_free_idx(uint8_t);
+
 void hsv_editor_rgb_color_storage_set_names(char names[COLORS_ENTRY_SIZE][COLORS_ENTRY_SIZE], uint8_t len);
 
 void hsv_editor_rgb_color_storage_set_colors(rgb_t* colors, uint8_t len);

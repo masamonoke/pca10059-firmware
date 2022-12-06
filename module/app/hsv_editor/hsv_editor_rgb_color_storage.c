@@ -111,3 +111,7 @@ void hsv_editor_rgb_color_storage_set_names(char names[COLORS_ENTRY_SIZE][COLORS
 void hsv_editor_rgb_color_storage_set_colors(rgb_t* colors, uint8_t len) {
     memcpy(s_colors_, colors, COLORS_ENTRY_SIZE * sizeof(rgb_t));
 }
+
+void hsv_editor_rgb_color_storage_set_last_free_idx(uint8_t data) {
+    s_cur_free_idx_ = data;
+}
