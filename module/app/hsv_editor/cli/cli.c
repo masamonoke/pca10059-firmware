@@ -6,6 +6,7 @@
 #include "module/utils/array_utils.h"
 #include "../hsv_editor_rgb_color_storage.h"
 #include "../hsv_editor_nvm.h"
+#include "module/error/runtime_error.h"
 
 #include "nrf_log.h"
 #include "string.h"
@@ -174,7 +175,7 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
     bool res = hsv_editor_rgb_color_storage_add_color(r, g, b, color_name);
     if (!res) {
         char message[] = "Color with that name is already saved\r\n";
-        NRF_LOG_INFO("%s", message);
+        NRF_LOG_INFO("Color with that name is already saved");
         cli_set_message(message);
         return false;
     }
@@ -182,7 +183,7 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
     uint8_t saved_colors_count = hsv_editor_rgb_color_storage_get_last_free_idx();
     if (saved_colors_count == 10) {
         char message[50] = "Saved colors count already at max count 10\r\n";
-        NRF_LOG_INFO("%s", message);
+        NRF_LOG_INFO("Saved colors count already at max count 10");
         cli_set_message(message);
         return false;
     }
@@ -190,6 +191,7 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
     bool is_saved = hsv_editor_save_added_colors();
     if (!is_saved) {
         NRF_LOG_INFO("Cannot save color");
+        RUNTIME_ERROR("NVM error. Cannot save color", -1);
         return false;
     } 
 

@@ -50,8 +50,13 @@ void hsv_editor_nvm_prepare_rgb_storage_to_write(uint32_t* array, uint8_t* len) 
     uint8_t restored_entries_count;
     hsv_editor_nvm_restore_previous_rgb_storage(restored_colors,
                                                 restored_color_names, &restored_entries_count);
+    
+    NRF_LOG_INFO("Preparing data. Restored entry count: %d", restored_entries_count);
 
     uint8_t curren_entries_count = hsv_editor_rgb_color_storage_get_last_free_idx();
+
+    NRF_LOG_INFO("Preparing data. Current entry count: %d", curren_entries_count);
+
     rgb_t colors[COLORS_ENTRY_SIZE];
     hsv_editor_rgb_color_storage_get_colors(colors);
     char color_names[COLORS_ENTRY_SIZE][COLORS_ENTRY_SIZE];
@@ -105,8 +110,8 @@ static void s_assemble_not_deleted_colors_data_(uint32_t* buf, uint32_t* restore
     int k = 0;
     size_t z = 0;
     size_t last_stop = 0;
+    NRF_LOG_INFO("Assembling not deleted colors data...");
     while (k != PAGE_SIZE - 2) {
-
         if (buf[k] == ERASED_WORD || buf[k] == LABEL_MARKED_FOR_DELETION) {
 
             if (buf[k + 1] == ERASED_WORD || buf[k + 1] == LABEL_MARKED_FOR_DELETION) {
@@ -135,14 +140,15 @@ static void s_assemble_not_deleted_colors_data_(uint32_t* buf, uint32_t* restore
     }
 }
 
+#define RESTORED_NON_ACTUAL_DATA 2000
 static void s_parse_restored_data_(rgb_t* colors, char color_names[10][10], uint8_t* len, uint32_t* restored_colors_data) {
     int k = 0;
     size_t z = 0;
     size_t entry_idx = 0;
     for (size_t i = 0; i < MAX_RGB_DATA_SIZE - 1; i++) {
 
-        if (restored_colors_data[i] == 0) {
-            if (restored_colors_data[i + 1] == 0) {
+        if (restored_colors_data[i] == RESTORED_NON_ACTUAL_DATA) {
+            if (restored_colors_data[i + 1] == RESTORED_NON_ACTUAL_DATA) {
                 break;
             }
         }
@@ -151,17 +157,18 @@ static void s_parse_restored_data_(rgb_t* colors, char color_names[10][10], uint
             if (i == 0) {
                 break;
             }
-
             k = (int) (i - 1);
             colors[entry_idx].blue = restored_colors_data[k--];
             colors[entry_idx].green = restored_colors_data[k--];
             colors[entry_idx].red = restored_colors_data[k--];
+            NRF_LOG_INFO("Restored color %d %d %d", colors[entry_idx].red, colors[entry_idx].green, colors[entry_idx].blue);
             z = 0;
             for (; k >= 0 && (restored_colors_data[k] != ERASED_WORD && restored_colors_data[k] != LABEL_MARKED_FOR_DELETION); k--, z++) {
                 color_names[entry_idx][z] = (char) restored_colors_data[k];
             }
             color_names[entry_idx][z] = '\0';
             string_utils_reverse(color_names[entry_idx]);
+            NRF_LOG_INFO("Restored color name %s", color_names[entry_idx]);
             entry_idx++;
         }
     }
@@ -178,7 +185,7 @@ void hsv_editor_nvm_restore_previous_rgb_storage(rgb_t* colors, char color_names
     ptr = (uint32_t*) NAMED_COLORS_SPACE_ADDR;
 
     uint32_t restored_colors_data[MAX_RGB_DATA_SIZE];
-    memset(restored_colors_data, 0, sizeof(uint32_t) * MAX_RGB_DATA_SIZE);
+    memset(restored_colors_data, RESTORED_NON_ACTUAL_DATA, sizeof(uint32_t) * MAX_RGB_DATA_SIZE);
     s_assemble_not_deleted_colors_data_(buf, restored_colors_data);
 
     s_parse_restored_data_(colors, color_names, len, restored_colors_data);
@@ -218,6 +225,7 @@ bool hsv_editor_save_added_colors(void) {
     uint32_t array[130];
     uint8_t len;
     hsv_editor_nvm_prepare_rgb_storage_to_write(array, &len);
+
     if (len != 0) {
         rgb_t restored_colors[COLORS_ENTRY_SIZE];
         char restored_color_names[COLORS_ENTRY_SIZE][COLORS_ENTRY_SIZE];
@@ -227,18 +235,26 @@ bool hsv_editor_save_added_colors(void) {
         if (restored_entries_count > 0 && *(s_color_names_inst_.p_addr - 1) != LABEL_MARKED_FOR_DELETION) {
             s_color_names_inst_.p_addr++;
         }
+
+        NRF_LOG_INFO("Prepared data count %d", len);
+
+        NRF_LOG_INFO("Pointer data before write: %d %d", *s_color_names_inst_.p_addr, (uint32_t) s_color_names_inst_.p_addr);
         
         bool is_erase_happened = nvm_write_values(&s_color_names_inst_, array, len);
+
+        NRF_LOG_INFO("Pointer data after write: %d %d", *s_color_names_inst_.p_addr, (uint32_t) s_color_names_inst_.p_addr);
+
         if (is_erase_happened) {    
             NRF_LOG_INFO("Erased Named colors page");
             hsv_editor_save_added_colors();
         }
 
-        s_color_names_inst_.p_addr++;
-
         return true;
+        
+    } else {
+        NRF_LOG_INFO("No named color to write to NVM");
     }
-
+    
     return false;
 }
 
