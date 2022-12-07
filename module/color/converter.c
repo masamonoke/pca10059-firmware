@@ -1,9 +1,10 @@
 #include "converter.h"
 #include <math.h>
 #include <stdlib.h>
+#include "nrf_log.h"
 
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define CONVERTER_MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define CONVERTER_MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 //formulas from here https://www.rapidtables.com/convert/color/rgb-to-hsv.html
 hsv_t converter_to_hsv_from_rgb(rgb_t rgb_data) {
@@ -11,20 +12,27 @@ hsv_t converter_to_hsv_from_rgb(rgb_t rgb_data) {
     float g_ = (float)rgb_data.green / 255;
     float b_ = (float)rgb_data.blue / 255;
 
-    float c_max = MAX(MAX(r_, g_), b_);
-    float c_min = MIN(MIN(r_, g_), b_);
+
+    float c_max = CONVERTER_MAX(CONVERTER_MAX(r_, g_), b_);
+    float c_min = CONVERTER_MIN(CONVERTER_MIN(r_, g_), b_);
 
     float delta = c_max - c_min;
 
-    float hue;
+    float hue = 0;
     if (delta == 0) {
         hue = 0;
     } else {
         if (r_ == c_max) {
-            hue = (60 * ((float)fmod(((g_ - b_) / delta), 6)));
+            float tmp = (g_ - b_) / delta;
+            tmp = tmp < 0 ? -tmp : tmp;
+            tmp = fmod(tmp, 6.0);
+            tmp *= 60;
+            hue = tmp;
         } else if (g_ == c_max) {
             hue = (60 * ((b_ - r_) / delta + 2));
-        } else {
+        }
+
+        if (b_ == c_max) {
             hue = (60 * ((r_ - g_) / delta + 4));
         }
     }
