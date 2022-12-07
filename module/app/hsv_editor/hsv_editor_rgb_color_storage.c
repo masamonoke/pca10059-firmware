@@ -2,6 +2,7 @@
 #include "hsv_editor.h"
 #include "module/color/converter.h"
 #include "cli/cli.h"
+
 #include <string.h>
 #include "nrf_log.h"
 

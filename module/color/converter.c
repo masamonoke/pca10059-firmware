@@ -1,4 +1,5 @@
 #include "converter.h"
+
 #include <math.h>
 #include <stdlib.h>
 #include "nrf_log.h"

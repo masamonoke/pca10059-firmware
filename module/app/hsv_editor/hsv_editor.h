@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include "module/color/converter.h"
 
 void hsv_editor_init(void);

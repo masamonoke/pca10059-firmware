@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include "module/color/converter.h"
 
 #define COLORS_ENTRY_SIZE 10
