@@ -20,7 +20,7 @@ static bool s_is_name_unique_(char* color_name) {
 }
 
 bool hsv_editor_rgb_color_storage_add_color(uint8_t r, uint8_t g, uint8_t b, char* color_name) {
-    if (s_cur_free_idx_ == 10) {
+    if (s_cur_free_idx_ == COLORS_ENTRY_SIZE) {
         cli_set_message("Color storage is more than 10. Delete unwanted colors to free space\r\n");
         NRF_LOG_INFO("Color storage is more than 10. Delete unwanted colors to free space");
         return false;

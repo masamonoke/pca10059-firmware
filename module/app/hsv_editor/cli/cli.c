@@ -117,6 +117,7 @@ static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_i
         .green = g
     };
     hsv_t hsv_obj = converter_to_hsv_from_rgb(rgb_obj);
+    NRF_LOG_INFO("Converted rgb %d %d %d", hsv_obj.hue, hsv_obj.saturation, hsv_obj.value);
     hsv_editor_set_hsv_object(hsv_obj.hue, hsv_obj.saturation, hsv_obj.value);
     char message_part[] = "Color set to ";
     s_prepare_message_(vals, args_count, message_part, strlen(message_part), chars);
@@ -181,7 +182,7 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
     }
 
     uint8_t saved_colors_count = hsv_editor_rgb_color_storage_get_last_free_idx();
-    if (saved_colors_count == 10) {
+    if (saved_colors_count == COLORS_ENTRY_SIZE) {
         char message[50] = "Saved colors count already at max count 10\r\n";
         NRF_LOG_INFO("Saved colors count already at max count 10");
         cli_set_message(message);
