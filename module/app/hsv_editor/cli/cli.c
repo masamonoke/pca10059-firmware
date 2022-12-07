@@ -188,7 +188,7 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
         return false;
     }
 
-    bool is_saved = hsv_editor_save_added_colors();
+    bool is_saved = hsv_editor_nvm_save_added_colors();
     if (!is_saved) {
         NRF_LOG_INFO("Cannot save color");
         RUNTIME_ERROR("NVM error. Cannot save color", -1);
@@ -199,16 +199,6 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
 }
 
 static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t args_start_idx) {
-
-    //e.g. add_rgb_color 176 196 222 light_steel_blue is not allowed because of too long color name
-    //shorten long names like lg_st_blue
-    const uint8_t input_max_len = 36;
-    if (strlen(input) > input_max_len) {
-        char message[30] = "Color name is too long\r\n";
-        cli_set_message(message);
-        return false;
-    }
-
     uint8_t str_len = strlen(input);
     uint8_t space_count = 0;
     size_t i;
@@ -232,8 +222,17 @@ static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t ar
     uint8_t g = math_utils_clamp_int(args[1], 255, 0);
     uint8_t b = math_utils_clamp_int(args[2], 255, 0);
 
-    char color_name[10];
+
+    //e.g. add_rgb_color 176 196 222 light_steel_blue is not allowed because of too long color name
+    //shorten long names like lt_st_blue
+    const uint8_t max_color_name_len = 10;
+    char color_name[30];
     string_utils_substring_to_end(input, i + 1, color_name);
+    if (strlen(color_name) > max_color_name_len) {
+        char message[30] = "Color name is too long\r\n";
+        cli_set_message(message);
+        return false;
+    }
 
     bool is_saved = s_save_color_with_name_(r, g, b, color_name);
     if (!is_saved) {
@@ -250,9 +249,12 @@ static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t ar
 }
 
 static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_idx) {
+    
     char color_name[10];
     string_utils_substring_to_end(input, args_start_idx + 1, color_name);
+
     rgb_t color = hsv_editor_rgb_color_storage_get_color_by_name(color_name);
+
     if (color.red == 0 && color.green == 0 && color.blue == 0) {
         char message[50] = "There is no color with name ";
         strcat(message, color_name);
@@ -261,6 +263,7 @@ static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_i
         cli_set_message(message);
         return true;
     }
+
     hsv_t hsv_color = converter_to_hsv_from_rgb(color);
     hsv_editor_set_hsv_object(hsv_color.hue, hsv_color.saturation, hsv_color.value);
     char message[30] = "PWM color set to ";

@@ -221,7 +221,7 @@ void hsv_editor_nvm_mark_for_deletion_rgb_storage_entry(char* color_name, uint16
     *idx = -1;
 }
 
-bool hsv_editor_save_added_colors(void) {
+bool hsv_editor_nvm_save_added_colors(void) {
     uint32_t array[130];
     uint8_t len;
     hsv_editor_nvm_prepare_rgb_storage_to_write(array, &len);
@@ -246,13 +246,14 @@ bool hsv_editor_save_added_colors(void) {
 
         if (is_erase_happened) {    
             NRF_LOG_INFO("Erased Named colors page");
-            hsv_editor_save_added_colors();
+            hsv_editor_nvm_save_added_colors();
         }
 
         return true;
         
     } else {
         NRF_LOG_INFO("No named color to write to NVM");
+        return true;
     }
     
     return false;
