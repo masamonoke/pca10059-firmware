@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define MESSAGE_SIZE 1000
+
 void cli_proceed(const char* input);
 
 bool cli_is_there_message(void);

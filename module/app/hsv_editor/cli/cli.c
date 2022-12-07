@@ -11,7 +11,6 @@
 #include "nrf_log.h"
 #include "string.h"
 
-#define MESSAGE_SIZE 150
 static char s_message_[MESSAGE_SIZE];
 static bool s_is_message_ = false;
 
@@ -117,7 +116,6 @@ static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_i
         .green = g
     };
     hsv_t hsv_obj = converter_to_hsv_from_rgb(rgb_obj);
-    NRF_LOG_INFO("Converted rgb %d %d %d", hsv_obj.hue, hsv_obj.saturation, hsv_obj.value);
     hsv_editor_set_hsv_object(hsv_obj.hue, hsv_obj.saturation, hsv_obj.value);
     char message_part[] = "Color set to ";
     s_prepare_message_(vals, args_count, message_part, strlen(message_part), chars);
@@ -152,22 +150,6 @@ static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_i
     NRF_LOG_INFO("Color set to H=%d S=%d V=%d", h, s, v);
 
     hsv_editor_set_is_nvm_write_time(true);
-
-    return true;
-}
-
-static void s_prepare_help_message_(void) {
-    char message[] = "RGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp\r\n";
-    cli_set_message(message);
-    NRF_LOG_INFO("\r\nRGB <red> <green> <blue>\r\nHSV <hur> <saturation> <value>\r\nhelp");
-}
-
-static bool s_cli_functions_help_proceed_(const char* input, uint8_t args_start_idx) {
-    if (input[args_start_idx] != '\0') {
-        return false;
-    }
-
-    s_prepare_help_message_();
 
     return true;
 }
@@ -229,8 +211,11 @@ static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t ar
     const uint8_t max_color_name_len = 10;
     char color_name[30];
     string_utils_substring_to_end(input, i + 1, color_name);
-    if (strlen(color_name) > max_color_name_len) {
-        char message[30] = "Color name is too long\r\n";
+    uint8_t input_color_name = strlen(color_name);
+    if (input_color_name > max_color_name_len) {
+        //char message[30] = "Color name is too long.\r\n";
+        char message[50];
+        sprintf(message, "Color name is too long. Should be %d, input %d\r\n", max_color_name_len, input_color_name);
         cli_set_message(message);
         return false;
     }
@@ -240,10 +225,8 @@ static bool s_cli_functions_add_rgb_color_proceed_(const char* input, uint8_t ar
         return true;
     }
 
-    char message[100] = "Color with name " ;
-    strcat(message, color_name);
-    char tmp[] = " saved to storage\r\n";
-    strcat(message, tmp);
+    char message[50];
+    sprintf(message, "Color with name \"%s\" saved to storage\r\n", color_name);
     cli_set_message(message);
 
     return true;
@@ -257,20 +240,16 @@ static bool s_cli_functions_apply_color_(const char* input, uint8_t args_start_i
     rgb_t color = hsv_editor_rgb_color_storage_get_color_by_name(color_name);
 
     if (color.red == 0 && color.green == 0 && color.blue == 0) {
-        char message[50] = "There is no color with name ";
-        strcat(message, color_name);
-        char tmp[] = "\r\n";
-        strcat(message, tmp);
+        char message[50];
+        sprintf(message, "There is no color with name \"%s\"\r\n", color_name);
         cli_set_message(message);
         return true;
     }
 
     hsv_t hsv_color = converter_to_hsv_from_rgb(color);
     hsv_editor_set_hsv_object(hsv_color.hue, hsv_color.saturation, hsv_color.value);
-    char message[30] = "PWM color set to ";
-    strcat(message, color_name);
-    char tmp[] = "\r\n";
-    strcat(message, tmp);
+    char message[30];
+    sprintf(message, "PWM color set to \"%s\" color\r\n", color_name);
     cli_set_message(message);
 
     hsv_editor_set_is_nvm_write_time(true);
@@ -283,10 +262,8 @@ static bool s_cli_functions_del_color_proceed_(const char* input, uint8_t args_s
     string_utils_substring_to_end(input, args_start_idx + 1, color_name);
     rgb_t color = hsv_editor_rgb_color_storage_get_color_by_name(color_name);
     if (color.red == 0 && color.green == 0 && color.blue == 0) {
-        char message[50] = "There is no color with name ";
-        strcat(message, color_name);
-        char tmp[] = "\r\n";
-        strcat(message, tmp);
+        char message[50];
+        sprintf(message, "There is no color with name \"%s\"\r\n", color_name);
         cli_set_message(message);
         return true;
     }
@@ -326,50 +303,71 @@ static bool s_cli_functions_add_current_color_(const char* input, uint8_t args_s
         return true;
     }
     
-    char message[30] = "Color ";
-    strcat(message, color_name);
-    char tmp[] = " saved\r\n";
-    strcat(message, tmp);
+    char message[30];
+    sprintf(message, "Color %s saved\r\n", color_name);
     cli_set_message(message);
     return true;
 }
 
 #define COMMAND_STR_LEN 20
+#define META_DATA_LEN 50
 typedef struct {
     char command[COMMAND_STR_LEN];
+    char meta[META_DATA_LEN];
     bool (* command_func)(const char*, uint8_t);
 } command_obj_t;
 
 static command_obj_t s_commands_[] = {
     {
         .command = "rgb",
-        .command_func = s_cli_functions_rgb_proceed_
+        .command_func = s_cli_functions_rgb_proceed_,
+        .meta = "RGB <red> <green> <blue>"
     },
     {
         .command = "hsv",
-        .command_func = s_cli_functions_hsv_proceed_
-    },
-    {
-        .command = "help",
-        .command_func = s_cli_functions_help_proceed_
+        .command_func = s_cli_functions_hsv_proceed_,
+        .meta = "HSV <hur> <saturation> <value>"
     },
     {
         .command = "add_rgb_color",
-        .command_func = s_cli_functions_add_rgb_color_proceed_
+        .command_func = s_cli_functions_add_rgb_color_proceed_,
+        .meta = "add_rgb_color <r> <g> <b> <color_name>"
     },
     {
         .command = "apply_color",
-        .command_func = s_cli_functions_apply_color_
+        .command_func = s_cli_functions_apply_color_,
+        .meta = "apply_color <color_name>"
     },
     {
         .command = "del_color",
-        .command_func = s_cli_functions_del_color_proceed_
+        .command_func = s_cli_functions_del_color_proceed_,
+        .meta = "del_color <color_name>"
     },
     {
         .command = "add_current_color",
-        .command_func = s_cli_functions_add_current_color_
+        .command_func = s_cli_functions_add_current_color_,
+        .meta = "add_current_color <color_name>"
     }
 };
+
+static void s_prepare_help_message_(void) {
+    char message[MESSAGE_SIZE] = "";
+    for (size_t i = 0; i < ARRAY_LEN(s_commands_); i++) {
+        sprintf(message + strlen(message), "%s\r\n", s_commands_[i].meta);
+    }
+    cli_set_message(message);
+    NRF_LOG_INFO("%s", message);
+}
+
+static bool s_cli_functions_help_proceed_(const char* input, uint8_t args_start_idx) {
+    if (input[args_start_idx] != '\0') {
+        return false;
+    }
+
+    s_prepare_help_message_();
+
+    return true;
+}
 
 static void s_select_command_(const char* command_str, const char* input, const size_t args_start_idx) {
     for (uint16_t com_idx = 0; com_idx < ARRAY_LEN(s_commands_); com_idx++) {
@@ -381,6 +379,13 @@ static void s_select_command_(const char* command_str, const char* input, const 
             }
         }
     }
+
+    if (string_utils_compare_string("help", command_str)) {
+        if (s_cli_functions_help_proceed_(input, args_start_idx)) {
+            return;
+        }
+    }
+
     s_cli_functions_undefined_command_();
 }
 
