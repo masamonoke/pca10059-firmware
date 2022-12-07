@@ -67,12 +67,16 @@ rgb_t hsv_editor_rgb_color_storage_get_color_by_name(char* color_name) {
 
 void hsv_editor_rgb_color_storage_delete(char* color_name) {
     size_t i = 0;
+    bool is_equal = false;
     while (i != COLORS_ENTRY_SIZE) {
-        bool is_equal = !strcmp(s_color_names_[i], color_name);
+        is_equal = !strcmp(s_color_names_[i], color_name);
         if (is_equal) {
             break;
         }
         i++;
+    }
+    if (!is_equal) {
+        return;
     }
     for (i++; i < COLORS_ENTRY_SIZE; i++) {
         strcpy(s_color_names_[i - 1], s_color_names_[i]);

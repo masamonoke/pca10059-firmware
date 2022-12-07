@@ -15,6 +15,8 @@ INC_FILES += \
 
 include ../Makefile.common
 
-#to reset this value first make clean
+#to reset this values first make clean
 ESTC_USB_CLI_ENABLED ?= 1
+ESTC_IS_USB_CLI_LOCKABLE ?= 1
 CFLAGS += -DESTC_USB_CLI_ENABLED=$(ESTC_USB_CLI_ENABLED)
+CFLAGS += -DESTC_IS_USB_CLI_LOCKABLE=$(ESTC_IS_USB_CLI_LOCKABLE)
