@@ -1,10 +1,11 @@
 #include "hsv_editor.h"
 #include "hsv_editor_nvm.h"
-#include "nrfx_nvmc.h"
 #include "hsv_editor_rgb_color_storage.h"
-#include <string.h>
 #include "module/utils/string_utils.h"
+
 #include "nrf_log.h"
+#include "nrfx_nvmc.h"
+#include <string.h>
 
 #define SAVED_SET_COLOR_SPACE_ADDR START_ADDR
 #define NAMED_COLORS_SPACE_ADDR (SAVED_SET_COLOR_SPACE_ADDR + PAGE_SIZE)

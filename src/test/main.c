@@ -35,7 +35,6 @@ int main(int argc, const char* argv[]) {
             gpio_utils_blink_async(LED_RED, DELAY_MS);
         }
 
-        LOG_BACKEND_USB_PROCESS();
-        NRF_LOG_PROCESS();
+        nordic_usb_logging_process();
     }
 }

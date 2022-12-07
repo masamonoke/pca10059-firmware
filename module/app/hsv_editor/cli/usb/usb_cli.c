@@ -1,8 +1,9 @@
 #include "usb_cli.h"
 #include "module/io/gpio_utils.h"
-#include "nrf_log.h"
 #include "../cli.h"
 #include "module/app/hsv_editor/hsv_editor.h"
+
+#include "nrf_log.h"
 
 #define READ_SIZE 1
 
@@ -14,7 +15,6 @@
 #define CDC_ACM_DATA_EPOUT      NRF_DRV_USBD_EPOUT4
 
 #define BUFF_SIZE 40
-#define MESSAGE_SIZE 150
 
 static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_acm_user_event_t event);
 
