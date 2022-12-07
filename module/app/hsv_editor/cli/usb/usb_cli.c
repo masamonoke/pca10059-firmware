@@ -93,8 +93,6 @@ static void usb_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_ac
                 } else {
                     cli_proceed(s_buff_);
                 }
-#else
-                cli_proceed(s_buff_);
 #endif
                 s_clean_buffer_();
                 ret = app_usbd_cdc_acm_write(&usb_cdc_acm, "\r\n", 2);
