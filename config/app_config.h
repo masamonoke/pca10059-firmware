@@ -30,6 +30,8 @@
 #ifndef APP_CONFIG_H
 #define APP_CONFIG_H
 
+#define NRF_DFU_APP_DATA_AREA_SIZE 0x00003000
+
 // <e> NRF_LOG_BACKEND_UART_ENABLED - nrf_log_backend_uart - Log UART backend
 //==========================================================
 #ifndef NRF_LOG_BACKEND_UART_ENABLED
@@ -126,5 +128,14 @@
 #endif
 
 // </e>
+
+#define NRFX_PWM_ENABLED 1
+
+#define PWM_ENABLED 1
+#define PWM0_ENABLED 1
+
+#ifndef NRFX_NVMC_ENABLED
+#define NRFX_NVMC_ENABLED 1
+#endif
 
 #endif

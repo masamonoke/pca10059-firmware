@@ -9,6 +9,9 @@ PROJ_DIR := .
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
   LINKER_SCRIPT  := estc_adverts_gcc_nrf52.ld
 
+PREF_MODULE = src/modules
+MODULE_SRC = $(shell find $(PREF_MODULE) -name '*.c')
+
 # Source files common to all targets
 SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
@@ -94,6 +97,11 @@ SRC_FILES += \
   $(SDK_ROOT)/components/ble/common/ble_advdata.c \
   $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \
   $(PROJ_DIR)/src/main.c \
+  $(MODULE_SRC) \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_pwm.c \
+  $(SDK_ROOT)/modules/nrfx/hal/nrf_nvmc.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_nvmc.c
+
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -227,6 +235,8 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/ble/ble_dtm \
   $(SDK_ROOT)/components/ble/ble_advertising \
   $(SDK_ROOT)/components \
+  src \
+  $(SDK_ROOT)/components/libraries/bootloader/dfu \
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -236,6 +246,11 @@ OPT = -O3 -g3
 # Uncomment the line below to enable link time optimization
 #OPT += -flto
 
+#to reset this values first make clean
+ESTC_USB_CLI_ENABLED ?= 1
+ESTC_IS_USB_CLI_LOCKABLE ?= 1
+CFLAGS += -DESTC_USB_CLI_ENABLED=$(ESTC_USB_CLI_ENABLED)
+CFLAGS += -DESTC_IS_USB_CLI_LOCKABLE=$(ESTC_IS_USB_CLI_LOCKABLE)
 # C flags common to all targets
 CFLAGS += $(OPT)
 CFLAGS += -DUSE_APP_CONFIG
@@ -256,6 +271,7 @@ CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # keep every function in a separate section, this allows linker to discard unused ones
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin -fshort-enums
+CFLAGS += -DESTC_USB_CLI_ENABLED=$(ESTC_USB_CLI_ENABLED)
 
 # C++ flags common to all targets
 CXXFLAGS += $(OPT)
