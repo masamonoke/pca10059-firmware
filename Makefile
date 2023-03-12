@@ -7,10 +7,14 @@ SDK_ROOT ?= /Users/masamonoke/lib/esl-nsdk
 PROJ_DIR := .
 
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
-  LINKER_SCRIPT  := estc_adverts_gcc_nrf52.ld
+  LINKER_SCRIPT  ?= estc_adverts_gcc_nrf52.ld
 
-PREF_MODULE = src/modules
+PREF_MODULE ?= src/modules
 MODULE_SRC = $(shell find $(PREF_MODULE) -name '*.c')
+MAIN_FUNC_PATH ?= $(PROJ_DIR)/src/main.c
+CONFIG_PATH ?= config
+DEPENDENCY_SRC ?= null
+SRC_DIR ?= src
 
 # Source files common to all targets
 SRC_FILES += \
@@ -96,16 +100,20 @@ SRC_FILES += \
   $(SDK_ROOT)/components/ble/common/ble_conn_params.c \
   $(SDK_ROOT)/components/ble/common/ble_advdata.c \
   $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \
-  $(PROJ_DIR)/src/main.c \
+  $(MAIN_FUNC_PATH) \
   $(MODULE_SRC) \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_pwm.c \
   $(SDK_ROOT)/modules/nrfx/hal/nrf_nvmc.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_nvmc.c
 
+ifneq ($(DEPENDENCY_SRC), null)
+  SRC_FILES += $(DEPENDENCY_SRC)
+endif
+
 
 # Include folders common to all targets
 INC_FOLDERS += \
-  config \
+  $(CONFIG_PATH) \
   $(SDK_ROOT)/modules/nrfx/mdk \
   $(SDK_ROOT)/modules/nrfx/hal \
   $(SDK_ROOT)/modules/nrfx/drivers/include \
@@ -235,7 +243,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/ble/ble_dtm \
   $(SDK_ROOT)/components/ble/ble_advertising \
   $(SDK_ROOT)/components \
-  src \
+  $(SRC_DIR) \
   $(SDK_ROOT)/components/libraries/bootloader/dfu \
 
 # Libraries common to all targets

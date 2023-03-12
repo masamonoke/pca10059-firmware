@@ -95,7 +95,6 @@ static void s_prepare_message_(const uint16_t* vals, uint16_t vals_count,
 }
 
 static bool s_cli_functions_rgb_proceed_(const char* input, uint8_t args_start_idx) {
-	NRF_LOG_INFO("Processing rgb request");
     const uint8_t args_count = 3;
     uint16_t args[args_count];
     if (!s_get_args_(input, args_start_idx, args, args_count)) {
