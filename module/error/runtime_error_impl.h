@@ -1,6 +1,8 @@
 #ifndef MODULE_ERROR_RUNTIME_ERROR_IMPL
 #define MODULE_ERROR_RUNTIME_ERROR_IMPL
 
+#include <stdbool.h>
+
 void runtime_error_init(void);
 
 void runtime_error_log_stacktrace(void);

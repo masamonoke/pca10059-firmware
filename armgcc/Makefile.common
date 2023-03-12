@@ -4,8 +4,13 @@ OUTPUT_DIRECTORY := _build
 DFU_PORT         ?= /dev/ttyACM0
 DFU_PACKAGE      := $(OUTPUT_DIRECTORY)/nrf52840_xxaa.dfu
 
-SDK_ROOT ?= /media/psf/HP-P500/nordic/esl-nsdk
+SDK_ROOT ?= /media/psf/Samsung_T5/dev/lib/esl-nsdk
 PROJ_DIR ?= ../src
+
+ifeq ($(PLATFORM), osx)
+	SDK_ROOT=/Users/masamonoke/lib/esl-nsdk
+	DFU_PORT=/dev/tty.usbmodemDA29A3A0D2851
+endif
 
 PREF_DEP = ../dependency
 DEPENDENCY_SRC ?= null

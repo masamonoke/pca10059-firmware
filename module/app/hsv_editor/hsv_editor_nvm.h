@@ -2,6 +2,7 @@
 #define MODULE_APP_HSV_EDITOR_NVM
 
 #include "module/memory/nvm.h"
+#include "module/color/converter.h"
 
 #define SAVED_SET_COLOR_SPACE_DATA_COUNT 3
 

@@ -2,3 +2,5 @@
 _*
 armgcc/debug
 src/debug
+compile_commands.json
+tags
