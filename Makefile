@@ -1,10 +1,15 @@
 PROJECT_NAME     := estc_adverts_pca10059_s140
 TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := _build
-DFU_PORT ?= /dev/tty.usbmodemDA29A3A0D2851
+DFU_PORT ?= /dev/ttyACM0
 
 SDK_ROOT ?= /Users/masamonoke/lib/esl-nsdk
 PROJ_DIR := .
+
+PLATFORM = none
+ifeq ($(PLATFORM), osx)
+	DFU_PORT = /dev/tty.usbmodemDA29A3A0D2851
+endif
 
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
   LINKER_SCRIPT  ?= estc_adverts_gcc_nrf52.ld
