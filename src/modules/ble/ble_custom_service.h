@@ -3,16 +3,16 @@
 #include "ble.h"
 #include "ble_srv_common.h"
 
-//uuid 56e9dab7-a61a-4cfe-8baa-22a0248a0e0c
+//generated uuid 56e9dab7-a61a-4cfe-8baa-22a0248a0e0c
 #define CUSTOM_SERVICE_UUID_BASE { 0x0C, 0x0E, 0x8A, 0x24, 0xA0, 0x22, \
 						           0xAA, 0x8B,                         \
 							       0xFE, 0x4C,                         \
                                    0x1A, 0xA6,                         \
-                                   0xB7, 0xDA, 0xE9, 0x56              \
+                                   0x00, 0x00, 0xE9, 0x56              \
                                  }								       
 
-#define CUSTOM_SERVICE_UUID 0x1400
-#define CUSTOM_VALUE_CHAR_UUID 0x1401
+#define CUSTOM_SERVICE_UUID 0xABCD
+#define CUSTOM_VALUE_CHAR_UUID 0xABCE
 
 typedef struct {
 	uint8_t initial_custom_value;

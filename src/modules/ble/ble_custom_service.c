@@ -99,6 +99,12 @@ static void on_write(ble_cus_t* p_cus, ble_evt_t const* p_ble_evt) {
 	NRF_LOG_INFO("Data sent: %d", p_evt_write->data[0]);
 	uint8_t led_number = p_evt_write->data[0];
 	switch (led_number) {
+		case 0:
+			NRF_LOG_INFO("Turn off leds");
+			gpio_utils_turn_off_led(LED_GREEN);
+			gpio_utils_turn_off_led(LED_RED);
+			gpio_utils_turn_off_led(LED_BLUE);
+			break;
 		case 1:
 			NRF_LOG_INFO("Toggled green led");
 			gpio_utils_led_invert(LED_GREEN);
