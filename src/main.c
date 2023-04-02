@@ -30,6 +30,8 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
+#include "modules/ble/ble_custom_service.h"
+
 #define MAX_DEVICE_LEN 31
 static uint8_t* device_name = (uint8_t*) "ThisIsAReallyLongNameAndLonger1";
 #define DEVICE_NAME_LEN strlen((char*) device_name)
@@ -38,6 +40,7 @@ static uint8_t* device_name = (uint8_t*) "ThisIsAReallyLongNameAndLonger1";
 #define MAX_CONN_INTERVAL MSEC_TO_UNITS(200, UNIT_1_25_MS)
 #define SLAVE_LATENCY 0
 #define CONN_SUP_TIMEOUT MSEC_TO_UNITS(2000, UNIT_10_MS)
+#define APP_BLE_OBSERVER_PRIO 3
 
 static void gap_parameters_init(void) {
 	ret_code_t err_code;
@@ -73,37 +76,6 @@ NRF_BLE_QWR_DEF(qwr_);
 
 static uint16_t conn_handle_ = BLE_CONN_HANDLE_INVALID;
 
-static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
-	ret_code_t err_code = NRF_SUCCESS;
-	switch (p_ble_evt->header.evt_id) {
-		
-		case BLE_GAP_EVT_DISCONNECTED:
-			NRF_LOG_INFO("Disconnected");
-			break;
-		
-		case BLE_GAP_EVT_CONNECTED:
-			NRF_LOG_INFO("Connected");
-			err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-			APP_ERROR_CHECK(err_code);
-			conn_handle_ = p_ble_evt->evt.gap_evt.conn_handle;
-			err_code = nrf_ble_qwr_conn_handle_assign(&qwr_, conn_handle_);
-			break;
-		
-		case BLE_GAP_EVT_PHY_UPDATE:
-			NRF_LOG_INFO("PHY update request");
-			ble_gap_phys_t const phys = {
-				.rx_phys = BLE_GAP_PHY_AUTO,
-				.tx_phys = BLE_GAP_PHY_AUTO
-			};
-			err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
-			APP_ERROR_CHECK(err_code);
-			break;
-		
-		default:
-			break;
-	}
-}
-
 #define APP_BLE_CONN_CFG_TAG 1
 
 static void ble_stack_init(void) {
@@ -114,7 +86,7 @@ static void ble_stack_init(void) {
 	err_code = nrf_sdh_ble_default_cfg_set(APP_BLE_CONN_CFG_TAG, &ram_start);
 	APP_ERROR_CHECK(err_code);
 	err_code = nrf_sdh_ble_enable(&ram_start);
-	NRF_SDH_BLE_OBSERVER(ble_observer_, APP_BLE_OBSERVER_PRIORITY, ble_evt_handler, NULL);
+	NRF_SDH_BLE_OBSERVER(ble_observer_, APP_BLE_OBSERVER_PRIO, ble_cus_on_ble_evt, NULL);
 }
 
 #define APP_ADV_INTERVAL 300
@@ -128,14 +100,14 @@ static void on_adv_event(ble_adv_evt_t ble_adv_evt) {
 
 	switch (ble_adv_evt) {
 		case BLE_ADV_EVT_FAST:
-			NRF_LOG_INFO("fast advertising");
+			NRF_LOG_INFO("Fast advertising");
 			err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
 			APP_ERROR_CHECK(err_code);	
 			NRF_LOG_INFO("adv data: %s", advertising_.adv_data.adv_data.p_data);
 			break;
 		
 		case BLE_ADV_EVT_IDLE:
-			NRF_LOG_INFO("idle");
+			NRF_LOG_INFO("Idle");
 			err_code = bsp_indication_set(BSP_INDICATE_IDLE);
 			APP_ERROR_CHECK(err_code);
 			break;
@@ -154,6 +126,14 @@ static void service_init(void) {
 	qwr_init.error_handler = qwr_error_handler;
 	err_code = nrf_ble_qwr_init(&qwr_, &qwr_init);
 	APP_ERROR_CHECK(err_code);
+
+	ble_cus_init_t cus_init;
+	memset(&cus_init, 0, sizeof(cus_init));
+	ble_cus_t cus;
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init.custom_value_char_attr_md.read_perm);
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init.custom_value_char_attr_md.write_perm);
+	err_code = ble_cus_init(&cus, &cus_init);
+	APP_ERROR_CHECK(err_code);
 }
 
 #define FIRST_CONN_PARAMS_UPDATE_DELAY APP_TIMER_TICKS(5000)
@@ -163,7 +143,10 @@ static void service_init(void) {
 static void on_conn_params_evt(ble_conn_params_evt_t* p_evt) {
 	ret_code_t err_code;
 	if (p_evt->evt_type == BLE_CONN_PARAMS_EVT_FAILED) {
-		err_code = sd_ble_gap_disconnect(conn_handle_, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
+		err_code = sd_ble_gap_disconnect(
+			conn_handle_,
+			BLE_HCI_CONN_INTERVAL_UNACCEPTABLE
+		);
 		APP_ERROR_CHECK(err_code);
 	}	
 }
@@ -189,9 +172,14 @@ static void conn_params_init(void) {
 }
 
 static void advertising_start(void) {
-	ret_code_t err_code = ble_advertising_start(&advertising_, BLE_ADV_MODE_FAST);
+	ret_code_t err_code = ble_advertising_start(
+		&advertising_,
+		BLE_ADV_MODE_FAST
+	);
 	APP_ERROR_CHECK(err_code);
 }
+
+static ble_uuid_t adv_uuids_s[] = { { CUSTOM_SERVICE_UUID, BLE_UUID_TYPE_VENDOR_BEGIN } };
 
 static void advertising_init(void) {
 	ret_code_t err_code;
@@ -199,24 +187,9 @@ static void advertising_init(void) {
 	ble_advertising_init_t init;
 	memset(&init, 0, sizeof(init));
 	init.advdata.name_type = BLE_ADVDATA_FULL_NAME;
-
-	size_t device_name_size = DEVICE_NAME_LEN;
-	size_t scan_res_flags_count = 4;
-	size_t scan_res_free_memory = abs(device_name_size - MAX_DEVICE_LEN);
-	size_t scan_flags_count_to_drop;
-	if (scan_res_free_memory > scan_res_flags_count) {
-		scan_flags_count_to_drop = 0;
-	} else {
-		scan_flags_count_to_drop = scan_res_flags_count - scan_res_free_memory;
-	}
-	uint16_t scan_res_data_size = device_name_size - scan_flags_count_to_drop;
-	ble_advdata_manuf_data_t manuf_data_response = {
-		.data.p_data = device_name,
-		.data.size = scan_res_data_size,
-		.company_identifier = 1
-	};
-	init.srdata.name_type = BLE_ADVDATA_NO_NAME;
-	init.srdata.p_manuf_specific_data = &manuf_data_response;
+	
+	init.srdata.uuids_complete.uuid_cnt = ARRAY_SIZE(adv_uuids_s);
+	init.srdata.uuids_complete.p_uuids = adv_uuids_s; 
 
 	init.config.ble_adv_fast_enabled = true;
 	init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
@@ -272,8 +245,8 @@ int main(void) {
 	ble_stack_init();
 	gap_parameters_init();
 	gatt_init();
-	advertising_init();
 	service_init();
+	advertising_init();
 	conn_params_init();
 
 	NRF_LOG_INFO("app started");
