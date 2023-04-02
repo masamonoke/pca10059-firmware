@@ -30,8 +30,9 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
-#define MAX_DEVICE_NAME 31
-static uint8_t device_name[MAX_DEVICE_NAME] = "ThisIsAReallyLongNameAndLonger1";
+#define MAX_DEVICE_LEN 31
+static uint8_t* device_name = (uint8_t*) "ThisIsAReallyLongNameAndLonger1";
+#define DEVICE_NAME_LEN strlen((char*) device_name)
 
 #define MIN_CONN_INTERVAL MSEC_TO_UNITS(100, UNIT_1_25_MS)
 #define MAX_CONN_INTERVAL MSEC_TO_UNITS(200, UNIT_1_25_MS)
@@ -45,7 +46,7 @@ static void gap_parameters_init(void) {
 	
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&security_mode);
 	
-	err_code = sd_ble_gap_device_name_set(&security_mode, device_name, strlen((char*) device_name));
+	err_code = sd_ble_gap_device_name_set(&security_mode, device_name, DEVICE_NAME_LEN);
 	APP_ERROR_CHECK(err_code);
 	
 	memset(&gap_conn_params, 0, sizeof(gap_conn_params));
@@ -164,11 +165,7 @@ static void on_conn_params_evt(ble_conn_params_evt_t* p_evt) {
 	if (p_evt->evt_type == BLE_CONN_PARAMS_EVT_FAILED) {
 		err_code = sd_ble_gap_disconnect(conn_handle_, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
 		APP_ERROR_CHECK(err_code);
-	}
-
-	if (p_evt->evt_type == BLE_CONN_PARAMS_EVT_SUCCEEDED) {
-
-	}
+	}	
 }
 
 static void conn_params_error_handler(uint32_t nrf_error) {
@@ -202,9 +199,22 @@ static void advertising_init(void) {
 	ble_advertising_init_t init;
 	memset(&init, 0, sizeof(init));
 	init.advdata.name_type = BLE_ADVDATA_FULL_NAME;
-	ble_advdata_manuf_data_t manuf_data_response;
-	manuf_data_response.data.p_data = device_name;
-	manuf_data_response.data.size = sizeof(device_name) - 4;
+
+	size_t device_name_size = DEVICE_NAME_LEN;
+	size_t scan_res_flags_count = 4;
+	size_t scan_res_free_memory = abs(device_name_size - MAX_DEVICE_LEN);
+	size_t scan_flags_count_to_drop;
+	if (scan_res_free_memory > scan_res_flags_count) {
+		scan_flags_count_to_drop = 0;
+	} else {
+		scan_flags_count_to_drop = scan_res_flags_count - scan_res_free_memory;
+	}
+	uint16_t scan_res_data_size = device_name_size - scan_flags_count_to_drop;
+	ble_advdata_manuf_data_t manuf_data_response = {
+		.data.p_data = device_name,
+		.data.size = scan_res_data_size,
+		.company_identifier = 1
+	};
 	init.srdata.name_type = BLE_ADVDATA_NO_NAME;
 	init.srdata.p_manuf_specific_data = &manuf_data_response;
 
@@ -250,8 +260,13 @@ static void log_init(void) {
 }
 
 int main(void) {
-	log_init();
+	log_init();	
 	timers_init();
+	if (DEVICE_NAME_LEN > 31) {
+		NRF_LOG_INFO("Device name exeeds limit %d", MAX_DEVICE_LEN);
+		APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+		return 1;
+	}
 	leds_init();
 	power_management_init();
 	ble_stack_init();
