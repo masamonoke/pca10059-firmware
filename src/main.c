@@ -75,7 +75,6 @@ static void gatt_init(void) {
 NRF_BLE_QWR_DEF(qwr_);
 
 static uint16_t conn_handle_ = BLE_CONN_HANDLE_INVALID;
-
 #define APP_BLE_CONN_CFG_TAG 1
 
 static void ble_stack_init(void) {
@@ -133,6 +132,14 @@ static void service_init(void) {
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init.custom_value_char_attr_md.read_perm);
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init.custom_value_char_attr_md.write_perm);
 	err_code = ble_cus_init(&cus, &cus_init);
+	APP_ERROR_CHECK(err_code);
+
+	ble_cus_init_t cus_init_1;
+	memset(&cus_init_1, 0, sizeof(cus_init_1));
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init_1.custom_value_char_attr_md.read_perm);
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init_1.custom_value_char_attr_md.write_perm);
+	ble_cus_t cus_1;
+	err_code = ble_cus_init(&cus_1, &cus_init_1);
 	APP_ERROR_CHECK(err_code);
 }
 

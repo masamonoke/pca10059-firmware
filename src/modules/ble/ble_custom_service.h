@@ -30,4 +30,3 @@ uint32_t ble_cus_init(ble_cus_t* cus, const ble_cus_init_t* cus_init);
 
 void ble_cus_on_ble_evt(ble_evt_t const* p_ble_evt, void* p_ctx);
 
-uint32_t ble_custom_custom_value_update(ble_cus_t* p_cus, uint8_t custom_value);
