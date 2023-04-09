@@ -30,10 +30,12 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
-#include "modules/ble/ble_custom_service.h"
+//#include "modules/ble/ble_custom_service.h"
+#include "modules/ble/ble_service.h"
+#include "modules/io/gpio_utils.h"
 
 #define MAX_DEVICE_LEN 31
-static uint8_t* device_name = (uint8_t*) "ThisIsAReallyLongNameAndLonger1";
+static uint8_t* device_name = (uint8_t*) "Custom BLE";
 #define DEVICE_NAME_LEN strlen((char*) device_name)
 
 #define MIN_CONN_INTERVAL MSEC_TO_UNITS(100, UNIT_1_25_MS)
@@ -68,6 +70,68 @@ static void gatt_init(void) {
 	ret_code_t err_code = nrf_ble_gatt_init(&gatt_, NULL);
 	APP_ERROR_CHECK(err_code);
 
+}
+
+static void on_connect(ble_custom_t* p_cus, ble_evt_t const* p_ble_evt) {
+	NRF_LOG_INFO("Connected");
+	ret_code_t err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
+	APP_ERROR_CHECK(err_code);
+	p_cus->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+}
+
+static void on_disconnect(ble_custom_t* p_cus, ble_evt_t const* p_ble_evt) {
+	UNUSED_PARAMETER(p_ble_evt);
+	NRF_LOG_INFO("Disconnected");
+	p_cus->conn_handle = BLE_CONN_HANDLE_INVALID;
+}
+
+static void on_write(ble_custom_t* p_cus, ble_evt_t const* p_ble_evt) {
+	ble_gatts_evt_write_t const* p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
+	NRF_LOG_INFO("Data sent: %d", p_evt_write->data[0]);
+	uint8_t led_number = p_evt_write->data[0];
+	switch (led_number) {
+		case 0:
+			NRF_LOG_INFO("Turn off leds");
+			gpio_utils_turn_off_led(LED_GREEN);
+			gpio_utils_turn_off_led(LED_RED);
+			gpio_utils_turn_off_led(LED_BLUE);
+			break;
+		case 1:
+			NRF_LOG_INFO("Toggled green led");
+			gpio_utils_led_invert(LED_GREEN);
+			break;
+		case 2:
+			NRF_LOG_INFO("Toggled blue led");
+			gpio_utils_led_invert(LED_BLUE);
+			break;
+		case 3:
+			NRF_LOG_INFO("Toggled red led");
+			gpio_utils_led_invert(LED_RED);
+			break;
+		default:
+			NRF_LOG_INFO("Cannot map this data to led");
+			break;
+	}
+}
+
+void ble_cus_on_ble_evt(ble_evt_t const* p_ble_evt, void* p_ctx) {	
+
+	ble_custom_t* p_cus = (ble_custom_t*) p_ctx;
+
+	switch (p_ble_evt->header.evt_id) {
+		case BLE_GAP_EVT_CONNECTED:
+			on_connect(p_cus, p_ble_evt);
+			break;
+		case BLE_GAP_EVT_DISCONNECTED:
+			on_disconnect(p_cus, p_ble_evt);
+			break;
+		case BLE_GATTS_EVT_WRITE:
+			NRF_LOG_INFO("On write evt");
+			on_write(p_cus, p_ble_evt);
+			break;
+		default:
+			break;
+	}
 }
 
 #define APP_BLE_OBSERVER_PRIORITY 3
@@ -126,20 +190,33 @@ static void service_init(void) {
 	err_code = nrf_ble_qwr_init(&qwr_, &qwr_init);
 	APP_ERROR_CHECK(err_code);
 
-	ble_cus_init_t cus_init;
-	memset(&cus_init, 0, sizeof(cus_init));
-	ble_cus_t cus;
-	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init.custom_value_char_attr_md.read_perm);
-	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init.custom_value_char_attr_md.write_perm);
-	err_code = ble_cus_init(&cus, &cus_init);
-	APP_ERROR_CHECK(err_code);
+	ble_uuid128_t base_uuid = { .uuid128 = CUSTOM_SERVICE_UUID_BASE };
 
-	ble_cus_init_t cus_init_1;
-	memset(&cus_init_1, 0, sizeof(cus_init_1));
-	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init_1.custom_value_char_attr_md.read_perm);
-	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init_1.custom_value_char_attr_md.write_perm);
-	ble_cus_t cus_1;
-	err_code = ble_cus_init(&cus_1, &cus_init_1);
+	ble_custom_init_t cus_init_3;
+	memset(&cus_init_3, 0, sizeof(cus_init_3));
+	ble_custom_t cus_3 = {
+		.uuid_type = BLE_UUID_TYPE_BLE
+	};
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init_3.custom_value_char_attr_md.read_perm);
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init_3.custom_value_char_attr_md.write_perm);
+	err_code = ble_service_add_service(
+		&cus_3,
+		&cus_init_3,
+		base_uuid,
+		CUSTOM_SERVICE_UUID
+	);
+	APP_ERROR_CHECK(err_code);
+	ble_custom_characteristic_data_t char_data;
+	uint8_t value = 18;
+	ble_service_setup_characteristic_rw_test(
+		&cus_3,
+		&cus_init_3,
+		&char_data,
+		CUSTOM_VALUE_CHAR_UUID,
+		value,
+		READ | WRITE
+	);
+	err_code = ble_service_add_characteristic(&cus_3, &cus_init_3, &char_data);
 	APP_ERROR_CHECK(err_code);
 }
 
