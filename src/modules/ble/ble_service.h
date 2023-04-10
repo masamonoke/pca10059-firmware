@@ -1,3 +1,6 @@
+#ifndef BLE_SERVICE_H
+#define BLE_SERVICE_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "ble.h"
@@ -14,61 +17,54 @@
 
 #define CUSTOM_SERVICE_UUID 0xABCD
 #define CUSTOM_VALUE_CHAR_UUID 0xABCE
+#define CUSTOM_VALUE_CHAR_UUID_SECOND 0xECBA
 
-typedef struct {
-	uint8_t initial_custom_value;
-	ble_srv_cccd_security_mode_t custom_value_char_attr_md;
-} ble_custom_init_t;
+typedef enum {
+	EMPTY_MODE = 0b0000,
+	READ = 0b0001,
+	WRITE = 0b0010,
+	NOTIFY = 0b0100,
+	INDICATE = 0b1000
+} ble_service_char_type_t;
 
 typedef struct {
 	uint16_t service_handle;
-	ble_gatts_char_handles_t custom_value_handles;
 	uint64_t conn_handle;
 	uint8_t uuid_type;
-} ble_custom_t;
+	ble_srv_cccd_security_mode_t custom_value_char_attr_md;
+} ble_service_data_t;
 
 typedef struct {
-	bool init_status;
 	uint16_t uuid;
 	ble_gatts_char_md_t char_md;
 	ble_gatts_attr_md_t attr_md;
 	ble_gatts_attr_t attr_char_value;
+	ble_gatts_char_handles_t value_handles;
 } ble_custom_characteristic_data_t;
 
-typedef struct {
-	uint16_t value_handle;
-	uint16_t user_desc_handle;
-	uint16_t client_char_desc_handle;
-	uint16_t server_char_desc_handle;
-} ble_custom_char_handles_t;
-
-
 ret_code_t ble_service_add_service(
-	ble_custom_t* cus, 
-	const ble_custom_init_t* cus_init, 
+	ble_service_data_t* service_data, 
 	ble_uuid128_t base_uuid, 
 	uint16_t service_uuid
 );
 
 
-ret_code_t ble_service_add_characteristic(
-	ble_custom_t *cus,
-	const ble_custom_init_t *cus_init,
-	ble_custom_characteristic_data_t* data 
+ret_code_t ble_service_add_characteristic(ble_service_data_t* service_data, ble_custom_characteristic_data_t* char_data);
+
+void ble_service_setup_characteristic (
+	ble_service_data_t* service_data,
+	ble_custom_characteristic_data_t* char_data,
+	uint16_t char_uuid, 
+	uint8_t value, ble_service_char_type_t type, 
+	char* user_desc,
+	uint8_t user_desc_len
 );
 
-
-typedef enum {
-	READ = 0b01,
-	WRITE = 0b10
-} ble_service_rw_t;
-
-void ble_service_setup_characteristic_rw_test(
-	ble_custom_t *service_data,
-	ble_custom_init_t *init,
-	ble_custom_characteristic_data_t *characteristic_data,
-	uint16_t char_uuid,
+uint32_t ble_service_value_update_handler(
+	ble_service_data_t* service_data,
 	uint8_t value,
-	ble_service_rw_t rw
+	ble_custom_characteristic_data_t* char_data,
+	ble_service_char_type_t type
 );
 
+#endif // BLE_SERVICE_H
