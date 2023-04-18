@@ -23,11 +23,18 @@ typedef struct {
 } ble_service_data_t;
 
 typedef struct {
+	uint16_t h;
+	uint8_t s;
+	uint8_t v;
+} ble_custom_char_value_t;
+
+typedef struct {
 	uint16_t uuid;
 	ble_gatts_char_md_t char_md;
 	ble_gatts_attr_md_t attr_md;
 	ble_gatts_attr_t attr_char_value;
 	ble_gatts_char_handles_t value_handles;
+	ble_custom_char_value_t value;
 } ble_custom_characteristic_data_t;
 
 /* #define BLE_SERVICE_DEF(_name)                          \ */
@@ -58,7 +65,7 @@ void ble_service_setup_characteristic (
 
 uint32_t ble_service_value_update_handler(
 	ble_service_data_t* service_data,
-	uint8_t value,
+	ble_custom_char_value_t value,
 	ble_custom_characteristic_data_t* char_data,
 	ble_service_char_type_t type
 );

@@ -35,6 +35,7 @@ bool hsv_editor_nvm_is_prev_set_color_saved(uint32_t* buf) {
 
 void hsv_editor_nvm_write_hsv(uint16_t h, uint8_t s, uint8_t v) {
     uint32_t values[] = { h, s, v };
+	NRF_LOG_INFO("hsv_editor_nvm_write_hsv()");
     nvm_write_values(&s_color_save_instance_, values, SAVED_SET_COLOR_SPACE_DATA_COUNT);
 }
 

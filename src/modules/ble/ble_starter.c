@@ -18,7 +18,6 @@
 #include "fds.h"
 #include "peer_manager.h"
 #include "peer_manager_handler.h"
-#include "bsp_btn_ble.h"
 #include "sensorsim.h"
 #include "ble_conn_state.h"
 #include "nrf_ble_gatt.h"
@@ -94,11 +93,6 @@ static void conn_params_error_handler(uint32_t nrf_error) {
 	APP_ERROR_HANDLER(nrf_error);
 }
 
-static void leds_init(void) {
-	ret_code_t err_code = bsp_init(BSP_INIT_LEDS, NULL);
-	APP_ERROR_CHECK(err_code);
-}
-
 static void conn_params_init(void) {
 	ret_code_t err_code;
 	ble_conn_params_init_t con_par_init;
@@ -129,7 +123,6 @@ ret_code_t ble_starter_init(void) {
 		APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
 		return NRF_ERROR_INVALID_STATE;
 	}
-	leds_init();
 	power_management_init();
 	gap_parameters_init();
 	gatt_init();

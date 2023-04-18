@@ -20,6 +20,8 @@ bool nvm_write_values(nvm_instance_t* instance, uint32_t* values, uint16_t len) 
         is_erased = true;
     }
 
+	NRF_LOG_INFO("DEBUG nvm modlue: before write");
+
     for (size_t i = 0; i < len; i++) {
         if (nrfx_nvmc_word_writable_check(instance->cur_addr, values[i])) {
             nrf_nvmc_write_word(instance->cur_addr, values[i]);
@@ -31,10 +33,13 @@ bool nvm_write_values(nvm_instance_t* instance, uint32_t* values, uint16_t len) 
         }
     }
 
+	NRF_LOG_INFO("DEBUG nvm module: after write");
+
     return is_erased;
 }
 
 void nvm_read_last_data(nvm_instance_t* instance, uint32_t* buf, uint16_t len) {
+	NRF_LOG_INFO("Reading last data from nvm");
     if (instance->cur_addr == instance->page) {
         buf = NULL;
         return;
@@ -51,6 +56,7 @@ void nvm_read_last_data(nvm_instance_t* instance, uint32_t* buf, uint16_t len) {
     } else {
         buf = NULL;
     }
+	NRF_LOG_INFO("Read last data from nvm");
 }
 
 void nvm_set_ptr_to_start(nvm_instance_t* instance) {

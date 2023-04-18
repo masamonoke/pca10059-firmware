@@ -88,18 +88,21 @@ void ble_service_setup_characteristic(
 	memset(&char_data->attr_char_value, 0, sizeof(char_data->attr_char_value));
 	char_data->attr_char_value.p_uuid = &ble_uuid;
     char_data->attr_char_value.p_attr_md = &char_data->attr_md;
-    char_data->attr_char_value.init_len = sizeof(uint8_t);
-    char_data->attr_char_value.init_offs = 0;
-    char_data->attr_char_value.max_len = sizeof(uint8_t);
-	char_data->attr_char_value.p_value = &value;
+    //char_data->attr_char_value.init_len = sizeof(uint8_t);
+    char_data->attr_char_value.init_len = sizeof(char_data->value);
+	char_data->attr_char_value.init_offs = 0;
+    //char_data->attr_char_value.max_len = sizeof(uint8_t);
+	char_data->attr_char_value.max_len = sizeof(char_data->value);
+	//char_data->attr_char_value.p_value = &value;
+	char_data->attr_char_value.p_value = (uint8_t*) &char_data->value;
 }
 
-uint32_t ble_service_value_update_handler(ble_service_data_t* service_data, uint8_t value, ble_custom_characteristic_data_t* char_data, ble_service_char_type_t type) {	
+uint32_t ble_service_value_update_handler(ble_service_data_t* service_data, ble_custom_char_value_t value, ble_custom_characteristic_data_t* char_data, ble_service_char_type_t type) {	
 	ble_gatts_value_t gatts_value;
 	memset(&gatts_value, 0, sizeof(gatts_value));
 	gatts_value.len = sizeof(value);
 	gatts_value.offset = 0;
-	gatts_value.p_value = &value;
+	gatts_value.p_value = (uint8_t*) &value;
 
 	ret_code_t err_code = sd_ble_gatts_value_set(
 		service_data->conn_handle,
@@ -128,7 +131,7 @@ uint32_t ble_service_value_update_handler(ble_service_data_t* service_data, uint
 		hvx_params.p_len = &gatts_value.len;
 		hvx_params.p_data = gatts_value.p_value;
 		err_code = sd_ble_gatts_hvx(service_data->conn_handle, &hvx_params);
-		NRF_LOG_INFO("Custom value update: %d", value);
+		NRF_LOG_INFO("Custom value update: %d %d %d", value.h, value.s, value.v);
 	} else {
 		NRF_LOG_INFO("Custom value update: not connected");
 		err_code = NRF_ERROR_INVALID_STATE;
