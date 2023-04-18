@@ -15,6 +15,18 @@
 #include "modules/io/gpio_utils.h"
 #include "modules/ble/ble_starter.h"
 
+//generated uuid 56e9dab7-a61a-4cfe-8baa-22a0248a0e0c
+#define CUSTOM_SERVICE_UUID_BASE { 0x0C, 0x0E, 0x8A, 0x24, 0xA0, 0x22, \
+						           0xAA, 0x8B,                         \
+							       0xFE, 0x4C,                         \
+                                   0x1A, 0xA6,                         \
+                                   0x00, 0x00, 0xE9, 0x56              \
+                                 }								       
+
+#define CUSTOM_SERVICE_UUID 0xABCD
+#define CUSTOM_VALUE_CHAR_UUID 0xABCE
+#define CUSTOM_VALUE_CHAR_UUID_SECOND 0xECBA
+
 #define MIN_CONN_INTERVAL MSEC_TO_UNITS(100, UNIT_1_25_MS)
 #define MAX_CONN_INTERVAL MSEC_TO_UNITS(200, UNIT_1_25_MS)
 #define SLAVE_LATENCY 0
@@ -77,7 +89,6 @@ static void on_write(ble_service_data_t* p_service_data, ble_evt_t const* p_ble_
 }
 
 void ble_cus_on_ble_evt(ble_evt_t const* p_ble_evt, void* p_ctx) {	
-
 	switch (p_ble_evt->header.evt_id) {
 		case BLE_GAP_EVT_CONNECTED:
 			on_connect(&service_data_s_, p_ble_evt);

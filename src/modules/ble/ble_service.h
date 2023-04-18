@@ -7,18 +7,6 @@
 #include "ble_srv_common.h"
 #include "app_error.h"
 
-//generated uuid 56e9dab7-a61a-4cfe-8baa-22a0248a0e0c
-#define CUSTOM_SERVICE_UUID_BASE { 0x0C, 0x0E, 0x8A, 0x24, 0xA0, 0x22, \
-						           0xAA, 0x8B,                         \
-							       0xFE, 0x4C,                         \
-                                   0x1A, 0xA6,                         \
-                                   0x00, 0x00, 0xE9, 0x56              \
-                                 }								       
-
-#define CUSTOM_SERVICE_UUID 0xABCD
-#define CUSTOM_VALUE_CHAR_UUID 0xABCE
-#define CUSTOM_VALUE_CHAR_UUID_SECOND 0xECBA
-
 typedef enum {
 	EMPTY_MODE = 0b0000,
 	READ = 0b0001,
@@ -42,6 +30,13 @@ typedef struct {
 	ble_gatts_char_handles_t value_handles;
 } ble_custom_characteristic_data_t;
 
+/* #define BLE_SERVICE_DEF(_name)                          \ */
+/* static ble_service_data_t _name;                   	   \ */
+/* NRF_SDH_BLE_OBSERVER(_name ## _obs,                     \ */
+/*                      BLE_HRS_BLE_OBSERVER_PRIO,         \ */
+/*                      ble_on_ble_evt, &_name) */
+
+
 ret_code_t ble_service_add_service(
 	ble_service_data_t* service_data, 
 	ble_uuid128_t base_uuid, 
@@ -55,7 +50,8 @@ void ble_service_setup_characteristic (
 	ble_service_data_t* service_data,
 	ble_custom_characteristic_data_t* char_data,
 	uint16_t char_uuid, 
-	uint8_t value, ble_service_char_type_t type, 
+	uint8_t value,
+	ble_service_char_type_t type, 
 	char* user_desc,
 	uint8_t user_desc_len
 );
