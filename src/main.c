@@ -20,6 +20,10 @@
 #include "modules/app/hsv_editor/hsv_editor_nvm.h"
 #include "modules/error/runtime_error_impl.h"
 #include <math.h>
+#include "fds.h"
+#include "nrf_fstorage.h"
+#include "nrf_fstorage_sd.h"
+#include "modules/memory/fstorage_utils.h"
 
 //generated uuid 56e9dab7-a61a-4cfe-8baa-22a0248a0e0c
 #define CUSTOM_SERVICE_UUID_BASE { 0x0C, 0x0E, 0x8A, 0x24, 0xA0, 0x22, \
@@ -203,11 +207,7 @@ static void on_write(ble_service_data_t* p_service_data, ble_evt_t const* p_ble_
 			char_data_s_.value.v = p_evt_write->data[2];
 
 			hsv_editor_set_hsv_object(char_data_s_.value.h, char_data_s_.value.s, char_data_s_.value.v);
-			if (nrf_sdh_is_enabled()) {
-				nrf_sdh_disable_request();
-				while (nrf_sdh_is_enabled()) {}
-			}
-            hsv_editor_nvm_write_hsv(char_data_s_.value.h, char_data_s_.value.s, char_data_s_.value.v);
+			hsv_editor_set_is_nvm_write_time(true);
 			NRF_LOG_INFO("Saved HSV color to nvm: %d %d %d", char_data_s_.value.h, char_data_s_.value.s, char_data_s_.value.v);
 		}
 	} else {
@@ -249,30 +249,22 @@ static void timers_init(void) {
 static void s_dummy_func_(void) {}
 
 int main(void) {
-	hsv_editor_init();
-
-	uint16_t initial_hue;
-    uint16_t initial_satur;
-    uint16_t initial_value;
-
-    uint32_t buf[SAVED_SET_COLOR_SPACE_DATA_COUNT];
-    bool is_data_in_nvm = hsv_editor_nvm_is_prev_set_color_saved(buf);
-    if (is_data_in_nvm) {
-        initial_hue = buf[0];
-        initial_satur = buf[1];
-        initial_value = buf[2];
-        NRF_LOG_INFO("Restored previous set color %d %d %d", initial_hue, initial_satur, initial_value);
-    } else {
-        initial_hue = (uint16_t) ceilf(360.f * LAST_ID_DIGITS / 100.f);
-        initial_satur = 100;
-        initial_value = 100;
-    }
+	hsv_editor_init(); 
 	
-	char_data_s_.value.h = initial_hue;
-	char_data_s_.value.s = initial_satur;
-	char_data_s_.value.v = initial_value;
+	fstorage_utils_init();
+	hsv_t data;
+	bool is_data_in_nvm = fstorage_utils_read_hsv(&data);
+	if (!is_data_in_nvm) {
+		data.hue = (uint16_t) ceilf(360.f * LAST_ID_DIGITS / 100.f);
+		data.saturation = 100;
+		data.value = 100;
+	}
+	
+	char_data_s_.value.h = data.hue;
+	char_data_s_.value.s = data.value;
+	char_data_s_.value.s = data.saturation;
 
-	hsv_editor_set_hsv_object(initial_hue, initial_satur, initial_value);
+	hsv_editor_set_hsv_object(data.hue, data.saturation, data.value);
 
 	void (*usb_proceed)(void) = s_dummy_func_;
 #ifdef ESTC_USB_CLI_ENABLED
@@ -298,16 +290,12 @@ int main(void) {
         hsv_editor_process_current_behavior();
 
         if (hsv_editor_get_is_nvm_write_time()) {
-			if (nrf_sdh_is_enabled()) {
-				nrf_sdh_disable_request();
-				while (nrf_sdh_is_enabled()) {}
-			}
             hsv_t cur_hsv_obj = hsv_editor_get_hsv_object();
 			char_data_s_.value.h = cur_hsv_obj.hue;
 			char_data_s_.value.s = cur_hsv_obj.saturation;
 			char_data_s_.value.v = cur_hsv_obj.value;
 
-            hsv_editor_nvm_write_hsv(cur_hsv_obj.hue, cur_hsv_obj.saturation, cur_hsv_obj.value);
+			fstorage_utils_write_hsv(cur_hsv_obj);
             hsv_editor_set_is_nvm_write_time(false);
             NRF_LOG_INFO("Saved HSV color to nvm: %d %d %d", cur_hsv_obj.hue, cur_hsv_obj.saturation, cur_hsv_obj.value);
         }
