@@ -258,42 +258,29 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 {
     ret_code_t err_code;
 
-    switch (p_evt->evt_id)
-    {
-        case PM_EVT_BONDED_PEER_CONNECTED:
-        {
+    switch (p_evt->evt_id) {
+        case PM_EVT_BONDED_PEER_CONNECTED: {
             NRF_LOG_INFO("Connected to a previously bonded device.");
         } break;
 
-        case PM_EVT_CONN_SEC_SUCCEEDED:
-        {
+        case PM_EVT_CONN_SEC_SUCCEEDED: {
             NRF_LOG_INFO("Connection secured: role: %d, conn_handle: 0x%x, procedure: %d.",
                          ble_conn_state_role(p_evt->conn_handle),
                          p_evt->conn_handle,
                          p_evt->params.conn_sec_succeeded.procedure);
         } break;
 
-        case PM_EVT_CONN_SEC_FAILED:
-        {
-            /* Often, when securing fails, it shouldn't be restarted, for security reasons.
-             * Other times, it can be restarted directly.
-             * Sometimes it can be restarted, but only after changing some Security Parameters.
-             * Sometimes, it cannot be restarted until the link is disconnected and reconnected.
-             * Sometimes it is impossible, to secure the link, or the peer device does not support it.
-             * How to handle this error is highly application dependent. */
+        case PM_EVT_CONN_SEC_FAILED: {
 			NRF_LOG_INFO("PV_EVT_CONN_SEC_FAILED evt");
         } break;
 
-        case PM_EVT_CONN_SEC_CONFIG_REQ:
-        {
-            // Reject pairing request from an already bonded peer.
+        case PM_EVT_CONN_SEC_CONFIG_REQ: {
             pm_conn_sec_config_t conn_sec_config = {.allow_repairing = true};
             pm_conn_sec_config_reply(p_evt->conn_handle, &conn_sec_config);
 			NRF_LOG_INFO("PM_EVT_CONN_SEC_CONFIG_REQ evt");
         } break;
 
-        case PM_EVT_STORAGE_FULL:
-        {
+        case PM_EVT_STORAGE_FULL: {
             // Run garbage collection on the flash.
             err_code = fds_gc();
             if (err_code == FDS_ERR_NO_SPACE_IN_QUEUES)
@@ -307,56 +294,12 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 			NRF_LOG_INFO("PM_EVT_STORAGE_FULL evt");
         } break;
 
-        case PM_EVT_PEERS_DELETE_SUCCEEDED:
-        {
+        case PM_EVT_PEERS_DELETE_SUCCEEDED: {
             advertising_start();
 			NRF_LOG_INFO("PV_EVT_PEERS_DELETE_SUCCEEDED evt");
         } break;
-
-        case PM_EVT_PEER_DATA_UPDATE_FAILED:
-        {
-            // Assert.
-            APP_ERROR_CHECK(p_evt->params.peer_data_update_failed.error);
-        } break;
-
-        case PM_EVT_PEER_DELETE_FAILED:
-        {
-            // Assert.
-            APP_ERROR_CHECK(p_evt->params.peer_delete_failed.error);
-        } break;
-
-        case PM_EVT_PEERS_DELETE_FAILED:
-        {
-            // Assert.
-            APP_ERROR_CHECK(p_evt->params.peers_delete_failed_evt.error);
-        } break;
-
-        case PM_EVT_ERROR_UNEXPECTED:
-        {
-            // Assert.
-            APP_ERROR_CHECK(p_evt->params.error_unexpected.error);
-        } break;
-
-        case PM_EVT_CONN_SEC_START:
-			NRF_LOG_INFO("PM_EVT_CONN_SEC_START evt");
+		default:
 			break;
-        case PM_EVT_PEER_DATA_UPDATE_SUCCEEDED:
-			break;
-        case PM_EVT_PEER_DELETE_SUCCEEDED:
-			NRF_LOG_INFO("PM_EVT_PEER_DELETE_SUCCEEDED");
-			break;
-        case PM_EVT_LOCAL_DB_CACHE_APPLIED:
-			break;
-        case PM_EVT_LOCAL_DB_CACHE_APPLY_FAILED:
-            // This can happen when the local DB has changed.
-        case PM_EVT_SERVICE_CHANGED_IND_SENT:
-			NRF_LOG_INFO("PM_EVT_SERVICE_CHANGED_IND_SENT");
-			break;
-        case PM_EVT_SERVICE_CHANGED_IND_CONFIRMED:
-			NRF_LOG_INFO("PM_EVT_SERVICE_CHANGED_IND_CONFIRMED");
-			break;
-        default:
-            break;
     }
 }
 

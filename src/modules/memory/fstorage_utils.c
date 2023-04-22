@@ -1,11 +1,6 @@
 #include "fstorage_utils.h"
 #include "nrf_nvmc.h"
 
-/* NRF_FSTORAGE_DEF(nrf_fstorage_t fstorage) = { */
-/*     .start_addr = FSTORAGE_START_ADDR, */
-/*     .end_addr   = FSTORAGE_END_ADDR, */
-/* }; */
-
 NRF_FSTORAGE_DEF(nrf_fstorage_t fstorage_s_) = {
     .start_addr = 0,
     .end_addr   = 0,
@@ -19,6 +14,7 @@ void wait_for_flash_ready(nrf_fstorage_t const * p_fstorage) {
 }
 
 static nrf_fstorage_api_t* p_fs_api;
+
 void fstorage_utils_init() {
 	fstorage_s_.start_addr = FSTORAGE_START_ADDR;
 	fstorage_s_.end_addr = FSTORAGE_END_ADDR;
@@ -42,45 +38,58 @@ uint32_t fstorage_utils_read(uint32_t address) {
 }
 
 bool fstorage_utils_read_hsv(hsv_t* data) {
-	uint32_t address;
-	address = FSTORAGE_START_ADDR;
-	uint32_t h = fstorage_utils_read(address);
-	if (h == -1) {
+	uint32_t addr = START_ADDR;
+	uint32_t* p_addr = (uint32_t*) addr;
+	while (fstorage_utils_read(addr) != -1) {
+		p_addr++;
+		addr = (uint32_t) p_addr;
+	}
+	
+	if (addr <= START_ADDR) {
 		return false;
 	}
-	uint32_t* p_addr;
-	p_addr = (uint32_t*) address;
-	p_addr++;
-	address = (uint32_t) p_addr;
-	uint32_t s = fstorage_utils_read(address);
-	p_addr = (uint32_t*) address;
-	p_addr++;
-	address = (uint32_t) p_addr;
-	uint32_t v = fstorage_utils_read(address);
-	
-	data->hue = h;
-	data->saturation = s;
-	data->value = v;
 
+	p_addr--;
+	addr = (uint32_t) p_addr;
+
+	data->value = (uint8_t) fstorage_utils_read(addr);
+	p_addr--;
+	addr = (uint32_t) p_addr;
+	data->saturation = (uint8_t) fstorage_utils_read(addr);
+	p_addr--;
+	addr = (uint32_t) p_addr;
+	data-> hue = (uint16_t) fstorage_utils_read(addr);
+
+	if (data->value == UINT8_MAX || data->hue == UINT16_MAX || data->saturation == UINT8_MAX) {
+		return false;
+	}
+	
 	return true;
 }
 
 void fstorage_utils_write_hsv(hsv_t hsv) {
-	fstorage_utils_erase();
-	uint32_t address;
-	address = FSTORAGE_START_ADDR;
-	fstorage_utils_write((uint32_t) hsv.hue, address);
-	wait_for_flash_ready(&fstorage_s_);
-	uint32_t* p_addr;
-	p_addr = (uint32_t*) address;
+	uint32_t addr = START_ADDR;
+	uint32_t* p_addr = (uint32_t*) addr;
+	while (fstorage_utils_read(addr) != -1) {
+		p_addr++;
+		addr = (uint32_t) p_addr;
+	}
+	
+	if (addr >= START_ADDR + PAGE_SIZE - 1) {
+		fstorage_utils_erase_page(START_ADDR);
+		addr = START_ADDR;
+		p_addr = (uint32_t*) addr;
+	}
+
+	fstorage_utils_write(hsv.hue, addr);
 	p_addr++;
-	address = (uint32_t) p_addr;
-	fstorage_utils_write((uint32_t) hsv.saturation, address);
-	wait_for_flash_ready(&fstorage_s_);
-	p_addr = (uint32_t*) address;
+	addr = (uint32_t) p_addr;
+	fstorage_utils_write(hsv.saturation, addr);
 	p_addr++;
-	address = (uint32_t) p_addr;
-	fstorage_utils_write((uint32_t) hsv.value, address);
-	wait_for_flash_ready(&fstorage_s_);
+	addr = (uint32_t) p_addr;
+	fstorage_utils_write(hsv.value, addr);
 }
 
+void fstorage_utils_erase_page(uint32_t addr) {
+	nrf_fstorage_erase(&fstorage_s_, addr, 1, NULL);
+}

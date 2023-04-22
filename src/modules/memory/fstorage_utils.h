@@ -25,4 +25,6 @@ bool fstorage_utils_read_hsv(hsv_t* data);
 
 void fstorage_utils_write_hsv(hsv_t hsv);
 
+void fstorage_utils_erase_page(uint32_t addr);
+
 #endif // FSTORAGE_UTILS_H
