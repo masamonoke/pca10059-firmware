@@ -37,13 +37,6 @@ typedef struct {
 	ble_custom_char_value_t value;
 } ble_custom_characteristic_data_t;
 
-/* #define BLE_SERVICE_DEF(_name)                          \ */
-/* static ble_service_data_t _name;                   	   \ */
-/* NRF_SDH_BLE_OBSERVER(_name ## _obs,                     \ */
-/*                      BLE_HRS_BLE_OBSERVER_PRIO,         \ */
-/*                      ble_on_ble_evt, &_name) */
-
-
 ret_code_t ble_service_add_service(
 	ble_service_data_t* service_data, 
 	ble_uuid128_t base_uuid, 
@@ -57,7 +50,6 @@ void ble_service_setup_characteristic (
 	ble_service_data_t* service_data,
 	ble_custom_characteristic_data_t* char_data,
 	uint16_t char_uuid, 
-	uint8_t value,
 	ble_service_char_type_t type, 
 	char* user_desc,
 	uint8_t user_desc_len

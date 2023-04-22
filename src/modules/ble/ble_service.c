@@ -40,7 +40,6 @@ void ble_service_setup_characteristic(
 	ble_service_data_t* service_data,
 	ble_custom_characteristic_data_t* char_data,
 	uint16_t char_uuid,
-	uint8_t value,
 	ble_service_char_type_t rw,
 	char* user_desc,
 	uint8_t user_desc_len
@@ -72,8 +71,9 @@ void ble_service_setup_characteristic(
 
 	memset(&char_data->attr_md, 0, sizeof(char_data->attr_md));
 	char_data->attr_md.read_perm = service_data->custom_value_char_attr_md.read_perm;
-    char_data->attr_md.write_perm = service_data->custom_value_char_attr_md.write_perm;
-    char_data->attr_md.vloc = BLE_GATTS_VLOC_STACK;
+	//char_data->attr_md.write_perm = service_data->custom_value_char_attr_md.write_perm;
+    BLE_GAP_CONN_SEC_MODE_SET_ENC_NO_MITM(&char_data->attr_md.write_perm);
+	char_data->attr_md.vloc = BLE_GATTS_VLOC_STACK;
     char_data->attr_md.rd_auth = 0;
     char_data->attr_md.wr_auth = 0;
     char_data->attr_md.vlen = 0;
@@ -131,9 +131,7 @@ uint32_t ble_service_value_update_handler(ble_service_data_t* service_data, ble_
 		hvx_params.p_len = &gatts_value.len;
 		hvx_params.p_data = gatts_value.p_value;
 		err_code = sd_ble_gatts_hvx(service_data->conn_handle, &hvx_params);
-		NRF_LOG_INFO("Custom value update: %d %d %d", value.h, value.s, value.v);
 	} else {
-		NRF_LOG_INFO("Custom value update: not connected");
 		err_code = NRF_ERROR_INVALID_STATE;
 	}
 

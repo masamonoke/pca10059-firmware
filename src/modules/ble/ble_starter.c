@@ -117,6 +117,8 @@ void ble_starter_idle_state_handle(void) {
 	LOG_BACKEND_USB_PROCESS();
 }
 
+
+
 ret_code_t ble_starter_init(void) {
 	if (DEVICE_NAME_LEN > 31) {
 		NRF_LOG_INFO("Device name exeeds limit %d", MAX_DEVICE_LEN);

@@ -25,6 +25,11 @@
 #include "nrf_fstorage_sd.h"
 #include "modules/memory/fstorage_utils.h"
 
+#include "peer_manager.h"
+#include "peer_manager_handler.h"
+#include "ble_conn_state.h"
+#include "nrf_nvmc.h"
+
 //generated uuid 56e9dab7-a61a-4cfe-8baa-22a0248a0e0c
 #define CUSTOM_SERVICE_UUID_BASE { 0x0C, 0x0E, 0x8A, 0x24, 0xA0, 0x22, \
 						           0xAA, 0x8B,                         \
@@ -83,8 +88,6 @@ static void ble_stack_init(void) {
 BLE_ADVERTISING_DEF(advertising_);
 
 static void on_adv_event(ble_adv_evt_t ble_adv_evt) {
-	//ret_code_t err_code;
-
 	switch (ble_adv_evt) {
 		case BLE_ADV_EVT_FAST:
 			NRF_LOG_INFO("Fast advertising");
@@ -120,15 +123,13 @@ static void service_init(void) {
 	);
 	APP_ERROR_CHECK(err_code);
 	
-	char notify_char_desc[] = "Notify char";
+	char notify_char_desc[] = "Color change";
 	uint8_t notify_char_desc_len = strlen(notify_char_desc);
-	uint8_t init_value_1 = 18;
 
 	ble_service_setup_characteristic (
 		&service_data_s_,
 		&char_data_s_,
 		CUSTOM_VALUE_CHAR_UUID,
-		init_value_1,
 		WRITE,
 		notify_char_desc,
 		notify_char_desc_len
@@ -136,14 +137,12 @@ static void service_init(void) {
 	err_code = ble_service_add_characteristic(&service_data_s_, &char_data_s_);
 	APP_ERROR_CHECK(err_code);
 
-	char indicate_char_description[] = "Indicate char";
+	char indicate_char_description[] = "Color read";
 	uint8_t indicate_char_len = strlen(indicate_char_description);
-	uint8_t init_value_2 = 17;
 	ble_service_setup_characteristic (
 		&service_data_s_,
 		&indicate_char_data_s_,
 		CUSTOM_VALUE_CHAR_UUID_SECOND,
-		init_value_2,
 		NOTIFY | READ,
 		indicate_char_description,
 		indicate_char_len
@@ -196,7 +195,6 @@ static void ble_enable(void) {
 }
 
 static void on_write(ble_service_data_t* p_service_data, ble_evt_t const* p_ble_evt) {
-	
 	ble_gatts_evt_write_t const* p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
 	uint16_t handle = p_evt_write->handle;
 	if (handle == char_data_s_.value_handles.value_handle) {
@@ -227,6 +225,9 @@ void ble_cus_on_ble_evt(ble_evt_t const* p_ble_evt, void* p_ctx) {
 			NRF_LOG_INFO("On write evt");
 			on_write(&service_data_s_, p_ble_evt);
 			break;
+		case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
+			NRF_LOG_INFO("SECURITY PARAMS REQUEST");
+            break;
 		default:
 			break;
 	}
@@ -244,13 +245,156 @@ static void timers_init(void) {
 	app_timer_start(notify_timer_, NOTIFY_TIMER_INTERVAL, NULL);
 }
 
+#define SEC_PARAM_BOND                  1          
+#define SEC_PARAM_MITM                  0     
+#define SEC_PARAM_LESC                  0                                       
+#define SEC_PARAM_KEYPRESS              0                                       
+#define SEC_PARAM_IO_CAPABILITIES       BLE_GAP_IO_CAPS_NONE                    
+#define SEC_PARAM_OOB                   0                                  
+#define SEC_PARAM_MIN_KEY_SIZE          7                                       
+#define SEC_PARAM_MAX_KEY_SIZE          16      
+
+static void pm_evt_handler(pm_evt_t const * p_evt)
+{
+    ret_code_t err_code;
+
+    switch (p_evt->evt_id)
+    {
+        case PM_EVT_BONDED_PEER_CONNECTED:
+        {
+            NRF_LOG_INFO("Connected to a previously bonded device.");
+        } break;
+
+        case PM_EVT_CONN_SEC_SUCCEEDED:
+        {
+            NRF_LOG_INFO("Connection secured: role: %d, conn_handle: 0x%x, procedure: %d.",
+                         ble_conn_state_role(p_evt->conn_handle),
+                         p_evt->conn_handle,
+                         p_evt->params.conn_sec_succeeded.procedure);
+        } break;
+
+        case PM_EVT_CONN_SEC_FAILED:
+        {
+            /* Often, when securing fails, it shouldn't be restarted, for security reasons.
+             * Other times, it can be restarted directly.
+             * Sometimes it can be restarted, but only after changing some Security Parameters.
+             * Sometimes, it cannot be restarted until the link is disconnected and reconnected.
+             * Sometimes it is impossible, to secure the link, or the peer device does not support it.
+             * How to handle this error is highly application dependent. */
+			NRF_LOG_INFO("PV_EVT_CONN_SEC_FAILED evt");
+        } break;
+
+        case PM_EVT_CONN_SEC_CONFIG_REQ:
+        {
+            // Reject pairing request from an already bonded peer.
+            pm_conn_sec_config_t conn_sec_config = {.allow_repairing = true};
+            pm_conn_sec_config_reply(p_evt->conn_handle, &conn_sec_config);
+			NRF_LOG_INFO("PM_EVT_CONN_SEC_CONFIG_REQ evt");
+        } break;
+
+        case PM_EVT_STORAGE_FULL:
+        {
+            // Run garbage collection on the flash.
+            err_code = fds_gc();
+            if (err_code == FDS_ERR_NO_SPACE_IN_QUEUES)
+            {
+                // Retry.
+            }
+            else
+            {
+                APP_ERROR_CHECK(err_code);
+            }
+			NRF_LOG_INFO("PM_EVT_STORAGE_FULL evt");
+        } break;
+
+        case PM_EVT_PEERS_DELETE_SUCCEEDED:
+        {
+            advertising_start();
+			NRF_LOG_INFO("PV_EVT_PEERS_DELETE_SUCCEEDED evt");
+        } break;
+
+        case PM_EVT_PEER_DATA_UPDATE_FAILED:
+        {
+            // Assert.
+            APP_ERROR_CHECK(p_evt->params.peer_data_update_failed.error);
+        } break;
+
+        case PM_EVT_PEER_DELETE_FAILED:
+        {
+            // Assert.
+            APP_ERROR_CHECK(p_evt->params.peer_delete_failed.error);
+        } break;
+
+        case PM_EVT_PEERS_DELETE_FAILED:
+        {
+            // Assert.
+            APP_ERROR_CHECK(p_evt->params.peers_delete_failed_evt.error);
+        } break;
+
+        case PM_EVT_ERROR_UNEXPECTED:
+        {
+            // Assert.
+            APP_ERROR_CHECK(p_evt->params.error_unexpected.error);
+        } break;
+
+        case PM_EVT_CONN_SEC_START:
+			NRF_LOG_INFO("PM_EVT_CONN_SEC_START evt");
+			break;
+        case PM_EVT_PEER_DATA_UPDATE_SUCCEEDED:
+			break;
+        case PM_EVT_PEER_DELETE_SUCCEEDED:
+			NRF_LOG_INFO("PM_EVT_PEER_DELETE_SUCCEEDED");
+			break;
+        case PM_EVT_LOCAL_DB_CACHE_APPLIED:
+			break;
+        case PM_EVT_LOCAL_DB_CACHE_APPLY_FAILED:
+            // This can happen when the local DB has changed.
+        case PM_EVT_SERVICE_CHANGED_IND_SENT:
+			NRF_LOG_INFO("PM_EVT_SERVICE_CHANGED_IND_SENT");
+			break;
+        case PM_EVT_SERVICE_CHANGED_IND_CONFIRMED:
+			NRF_LOG_INFO("PM_EVT_SERVICE_CHANGED_IND_CONFIRMED");
+			break;
+        default:
+            break;
+    }
+}
+
+static void peer_manager_init(void) {
+	ble_gap_sec_params_t sec_param;
+	ret_code_t err_code;
+	
+	err_code = pm_init();
+	APP_ERROR_CHECK(err_code);
+
+	memset(&sec_param, 0, sizeof(ble_gap_sec_params_t));
+    sec_param.bond           = SEC_PARAM_BOND;
+    sec_param.mitm           = SEC_PARAM_MITM;
+    sec_param.lesc           = SEC_PARAM_LESC;
+    sec_param.keypress       = SEC_PARAM_KEYPRESS;
+    sec_param.io_caps        = SEC_PARAM_IO_CAPABILITIES;
+    sec_param.oob            = SEC_PARAM_OOB;
+    sec_param.min_key_size   = SEC_PARAM_MIN_KEY_SIZE;
+    sec_param.max_key_size   = SEC_PARAM_MAX_KEY_SIZE;
+    sec_param.kdist_own.enc  = 1;
+    sec_param.kdist_own.id   = 1;
+    sec_param.kdist_peer.enc = 1;
+    sec_param.kdist_peer.id  = 1;
+
+    err_code = pm_sec_params_set(&sec_param);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = pm_register(pm_evt_handler);
+    APP_ERROR_CHECK(err_code);
+}
+
 #define LAST_ID_DIGITS 8 //id 6608
 
 static void s_dummy_func_(void) {}
 
 int main(void) {
 	hsv_editor_init(); 
-	
+
 	fstorage_utils_init();
 	hsv_t data;
 	bool is_data_in_nvm = fstorage_utils_read_hsv(&data);
@@ -259,7 +403,7 @@ int main(void) {
 		data.saturation = 100;
 		data.value = 100;
 	}
-	
+
 	char_data_s_.value.h = data.hue;
 	char_data_s_.value.s = data.value;
 	char_data_s_.value.s = data.saturation;
@@ -279,6 +423,7 @@ int main(void) {
 	ble_enable();
 	timers_init();
 	NRF_SDH_BLE_OBSERVER(ble_observer_, APP_BLE_OBSERVER_PRIO, ble_cus_on_ble_evt, NULL);
+	peer_manager_init();
 
 	nrf_ble_qwr_init_t qwr_init = { 0 };
 	qwr_init.error_handler = qwr_error_handler;
