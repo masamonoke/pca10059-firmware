@@ -364,7 +364,6 @@ int main(void) {
 	ble_enable();
 	timers_init();
 	NRF_SDH_BLE_OBSERVER(ble_observer_, APP_BLE_OBSERVER_PRIO, ble_cus_on_ble_evt, NULL);
-	//if pm is used hsv data persist only one reboot
 	peer_manager_init();
 
 	nrf_ble_qwr_init_t qwr_init = { 0 };
