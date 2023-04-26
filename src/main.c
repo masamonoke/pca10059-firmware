@@ -265,9 +265,9 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 
         case PM_EVT_CONN_SEC_SUCCEEDED: {
             NRF_LOG_INFO("Connection secured: role: %d, conn_handle: 0x%x, procedure: %d.",
-                         ble_conn_state_role(p_evt->conn_handle),
-                         p_evt->conn_handle,
-                         p_evt->params.conn_sec_succeeded.procedure);
+				ble_conn_state_role(p_evt->conn_handle),
+				p_evt->conn_handle,
+				p_evt->params.conn_sec_succeeded.procedure);
         } break;
 
         case PM_EVT_CONN_SEC_FAILED: {
@@ -283,12 +283,10 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
         case PM_EVT_STORAGE_FULL: {
             // Run garbage collection on the flash.
             err_code = fds_gc();
-            if (err_code == FDS_ERR_NO_SPACE_IN_QUEUES)
-            {
+            if (err_code == FDS_ERR_NO_SPACE_IN_QUEUES) {
                 // Retry.
             }
-            else
-            {
+            else {
                 APP_ERROR_CHECK(err_code);
             }
 			NRF_LOG_INFO("PM_EVT_STORAGE_FULL evt");
@@ -366,6 +364,7 @@ int main(void) {
 	ble_enable();
 	timers_init();
 	NRF_SDH_BLE_OBSERVER(ble_observer_, APP_BLE_OBSERVER_PRIO, ble_cus_on_ble_evt, NULL);
+	//if pm is used hsv data persist only one reboot
 	peer_manager_init();
 
 	nrf_ble_qwr_init_t qwr_init = { 0 };
@@ -388,12 +387,10 @@ int main(void) {
             NRF_LOG_INFO("Saved HSV color to nvm: %d %d %d", cur_hsv_obj.hue, cur_hsv_obj.saturation, cur_hsv_obj.value);
         }
 
-
 		if (!nrf_sdh_is_enabled()) {
 			ble_enable();
 			NRF_SDH_BLE_OBSERVER(ble_observer_, APP_BLE_OBSERVER_PRIO, ble_cus_on_ble_evt, NULL);
 		}
-
 
         usb_proceed();
 

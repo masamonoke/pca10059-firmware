@@ -1,5 +1,6 @@
 #include "fstorage_utils.h"
 #include "nrf_nvmc.h"
+#include "nrf_log.h"
 
 NRF_FSTORAGE_DEF(nrf_fstorage_t fstorage_s_) = {
     .start_addr = 0,
@@ -38,14 +39,14 @@ uint32_t fstorage_utils_read(uint32_t address) {
 }
 
 bool fstorage_utils_read_hsv(hsv_t* data) {
-	uint32_t addr = START_ADDR;
+	uint32_t addr = FSTORAGE_START_ADDR;
 	uint32_t* p_addr = (uint32_t*) addr;
 	while (fstorage_utils_read(addr) != -1) {
 		p_addr++;
 		addr = (uint32_t) p_addr;
 	}
 	
-	if (addr <= START_ADDR) {
+	if (addr <= FSTORAGE_START_ADDR) {
 		return false;
 	}
 
@@ -67,27 +68,31 @@ bool fstorage_utils_read_hsv(hsv_t* data) {
 	return true;
 }
 
-void fstorage_utils_write_hsv(hsv_t hsv) {
-	uint32_t addr = START_ADDR;
+uint32_t fstorage_utils_write_hsv(hsv_t hsv) {
+	uint32_t addr = FSTORAGE_START_ADDR;
 	uint32_t* p_addr = (uint32_t*) addr;
 	while (fstorage_utils_read(addr) != -1) {
 		p_addr++;
 		addr = (uint32_t) p_addr;
 	}
 	
-	if (addr >= START_ADDR + PAGE_SIZE - 1) {
-		fstorage_utils_erase_page(START_ADDR);
-		addr = START_ADDR;
+	if (addr >= FSTORAGE_START_ADDR + PAGE_SIZE - 1) {
+		fstorage_utils_erase_page(FSTORAGE_START_ADDR);
+		addr = FSTORAGE_START_ADDR;
 		p_addr = (uint32_t*) addr;
 	}
 
+	NRF_LOG_INFO("fstorage_utils: Star writing starting from address %s");
 	fstorage_utils_write(hsv.hue, addr);
+	NRF_LOG_INFO("fstorage_utils: Wrote data %d to %d", hsv.hue, addr);
 	p_addr++;
 	addr = (uint32_t) p_addr;
 	fstorage_utils_write(hsv.saturation, addr);
 	p_addr++;
 	addr = (uint32_t) p_addr;
 	fstorage_utils_write(hsv.value, addr);
+
+	return addr;
 }
 
 void fstorage_utils_erase_page(uint32_t addr) {
