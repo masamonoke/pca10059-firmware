@@ -21,6 +21,11 @@ void fstorage_utils_init() {
 	fstorage_s_.end_addr = FSTORAGE_END_ADDR;
     p_fs_api = &nrf_fstorage_sd;
 	nrf_fstorage_init(&fstorage_s_, p_fs_api, NULL);
+
+	if (fstorage_utils_read(FSTORAGE_START_ADDR) != FSTORAGE_CORRECT_DATA_LABEL) {
+		fstorage_utils_erase_page(FSTORAGE_START_ADDR);
+		fstorage_utils_write(FSTORAGE_CORRECT_DATA_LABEL, FSTORAGE_START_ADDR);
+	}
 }
 
 void fstorage_utils_erase(void) {
@@ -39,7 +44,7 @@ uint32_t fstorage_utils_read(uint32_t address) {
 }
 
 bool fstorage_utils_read_hsv(hsv_t* data) {
-	uint32_t addr = FSTORAGE_START_ADDR;
+	uint32_t addr = FSTORAGE_START_ADDR + sizeof(uint32_t);
 	uint32_t* p_addr = (uint32_t*) addr;
 	while (fstorage_utils_read(addr) != -1) {
 		p_addr++;
@@ -69,7 +74,7 @@ bool fstorage_utils_read_hsv(hsv_t* data) {
 }
 
 uint32_t fstorage_utils_write_hsv(hsv_t hsv) {
-	uint32_t addr = FSTORAGE_START_ADDR;
+	uint32_t addr = FSTORAGE_START_ADDR + sizeof(uint32_t);
 	uint32_t* p_addr = (uint32_t*) addr;
 	while (fstorage_utils_read(addr) != -1) {
 		p_addr++;
