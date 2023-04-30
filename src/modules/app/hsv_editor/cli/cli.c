@@ -303,8 +303,8 @@ static bool s_cli_functions_add_current_color_(const char* input, uint8_t args_s
 
     char color_name[10];
     string_utils_substring_to_end(input, args_start_idx + 1, color_name);
-    hsv_t hsv = hsv_editor_get_hsv_object();
-    rgb_t rgb = converter_to_rgb_from_hsv(hsv);
+    hsv_t* hsv = hsv_editor_get_hsv_object();
+    rgb_t rgb = converter_to_rgb_from_hsv(*hsv);
 
     bool is_saved = s_save_color_with_name_(rgb.red, rgb.green, rgb.blue, color_name);
     // WARNING: wtf

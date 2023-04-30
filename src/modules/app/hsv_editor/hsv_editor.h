@@ -12,7 +12,7 @@ void hsv_editor_change_color(void);
 
 void hsv_editor_process_current_behavior(void);
 
-hsv_t hsv_editor_get_hsv_object(void);
+hsv_t* hsv_editor_get_hsv_object(void);
 
 void hsv_editor_set_hsv_object(uint16_t h, uint8_t s, uint8_t v);
 

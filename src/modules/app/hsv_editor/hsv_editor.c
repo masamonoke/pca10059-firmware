@@ -215,8 +215,8 @@ bool hsv_editor_get_is_nvm_write_time(void) {
     return s_is_nvm_write_time_;
 }
 
-hsv_t hsv_editor_get_hsv_object(void) {
-    return s_hsv_data_;
+hsv_t* hsv_editor_get_hsv_object(void) {
+    return &s_hsv_data_;
 }
 
 void hsv_editor_set_is_nvm_write_time(bool is_write_time) {
