@@ -264,7 +264,7 @@ bool hsv_editor_nvm_save_added_colors(void) {
 bool hsv_editor_nvm_delete_color(char* color_name) {
     uint16_t delete_idx;
     hsv_editor_nvm_mark_for_deletion_rgb_storage_entry(color_name, &delete_idx);
-    if (delete_idx == -1) {
+    if (delete_idx == UINT16_MAX) {
         return false;
     }
     
@@ -277,3 +277,14 @@ bool hsv_editor_nvm_delete_color(char* color_name) {
 
     return true;
 }
+
+static bool is_nvm_enabled_s_ = true;
+
+bool hsv_editor_nvm_is_nvm_enabled(void) {
+	return is_nvm_enabled_s_;
+}
+
+void hsv_editor_nvm_set_nvm_enabled(bool flag) {
+	is_nvm_enabled_s_ = flag;
+}
+

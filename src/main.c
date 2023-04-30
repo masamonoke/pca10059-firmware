@@ -334,6 +334,7 @@ static void peer_manager_init(void) {
 static void s_dummy_func_(void) {}
 
 int main(void) {
+	hsv_editor_nvm_set_nvm_enabled(false);
 	hsv_editor_init(); 
 
 	fstorage_utils_init();
