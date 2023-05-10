@@ -3,7 +3,7 @@
 This project is a color editor application in HSV color model. Built and tested on PCA10059 by Nordic Semiconductor.
 
 # Usage
-To edit a color, you can physically double-click a button. On the first double click you can change the hue component. To edit HSV component long-press the button. To edit the next component, double-click again. After editing all three components, the color will be saved to the flash (persistent) memory of the device and the LEDs will display tuned color.
+To edit a color, you can physically double-click a button. On the first double click you can change the hue component. To edit HSV component, long-press the button. To edit the next component, double-click again. After editing all three components, the color will be saved to the flash (persistent) memory of the device and the LEDs will display tuned color.
 
 The second way to change the color is to use the nRF Connect application (or similiar) for Android and iOS using smartphone's BLE module.
 
@@ -24,4 +24,4 @@ Requirements for build is:
 2.  gcc-arm-none-eabi
 3.  make
 4.  build-essential
-5.  picocom (to read logs). For example, I read logs with ```picocom /dev/tty.usbmodem0000000000001``` where ```/dev/tty.usbmodem0000000000001``` is what device will be seen in /dev or ```/dev/ttyACM1``` on Linux
+5.  picocom (to read logs). For example, I read logs with ```picocom /dev/tty.usbmodem0000000000001``` where ```/dev/tty.usbmodem0000000000001``` is what device will be seen in /dev after flash or ```/dev/ttyACM1``` on Linux
