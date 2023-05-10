@@ -27,4 +27,8 @@ bool hsv_editor_nvm_save_added_colors(void);
 
 bool hsv_editor_nvm_delete_color(char* color_name);
 
+bool hsv_editor_nvm_is_nvm_enabled(void);
+
+void hsv_editor_nvm_set_nvm_enabled(bool flag);
+
 #endif /* MODULE_APP_HSV_EDITOR_NVM */

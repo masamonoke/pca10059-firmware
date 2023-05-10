@@ -149,7 +149,7 @@ void double_click_handler() {
 static void s_restore_previous_session_(void) {
     rgb_t restored_colors[COLORS_ENTRY_SIZE];
     char restored_color_names[COLORS_ENTRY_SIZE][COLORS_ENTRY_SIZE];
-    uint8_t restored_entries_count;
+    uint8_t restored_entries_count = 0;
     hsv_editor_nvm_restore_previous_rgb_storage(restored_colors, restored_color_names, &restored_entries_count);
     NRF_LOG_INFO("Restored entries count %d", restored_entries_count);
     if (restored_entries_count != 0) {
@@ -181,8 +181,10 @@ static void init(void) {
     s_mode_led_behavior_ = s_mode_led_turn_off_;
 
     s_is_changing_color_ = false;
-    
-    s_restore_previous_session_();
+   
+	if (hsv_editor_nvm_is_nvm_enabled()) {
+	    s_restore_previous_session_();
+	}
 } 
 
 static bool s_is_init_ = false;
@@ -213,8 +215,8 @@ bool hsv_editor_get_is_nvm_write_time(void) {
     return s_is_nvm_write_time_;
 }
 
-hsv_t hsv_editor_get_hsv_object(void) {
-    return s_hsv_data_;
+hsv_t* hsv_editor_get_hsv_object(void) {
+    return &s_hsv_data_;
 }
 
 void hsv_editor_set_is_nvm_write_time(bool is_write_time) {
