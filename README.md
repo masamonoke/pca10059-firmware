@@ -18,7 +18,7 @@ The second way to change the color is to use the nRF Connect application (or sim
 
 To build you need Unix based OS like Linux or MacOS.
 To build and flash you need to be in directory with Makefile and type into you terminal ```make dfu```.
-For example, I use ```make dfu -j 4 SDK_ROOT=/Users/masamonoke/lib/esl-nsdk DFU_PORT=/dev/tty.usbmodemDA29A3A0D2851``` where ```SDK_ROOT``` is the location of your customized Nordic SDK https://github.com/DSRCorporation/esl-nsdk, ```DFU_PORT``` is what port to use for flash the board. By default ```DFU_PORT``` is ```/dev/ttyACM0``` that is Linux default and can be omitted when build on this OS.
+For example, I use ```make dfu -j 4 SDK_ROOT=/Users/masamonoke/lib/esl-nsdk DFU_PORT=/dev/tty.usbmodemDA29A3A0D2851``` where ```SDK_ROOT``` is the location of your customized Nordic SDK https://github.com/DSRCorporation/esl-nsdk, ```DFU_PORT``` is what port to use to flash the board. By default ```DFU_PORT``` is ```/dev/ttyACM0``` that is Linux default and can be omitted when build on this OS.
 Requirements for build is:
 1.  nrfutil and Python 2.7 set as default Python version in system. You can get it by ```pip2 install nrfutil``` or ```pip install nrfutil```
 2.  gcc-arm-none-eabi
