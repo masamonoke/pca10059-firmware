@@ -156,6 +156,7 @@ static bool s_cli_functions_hsv_proceed_(const char* input, uint8_t args_start_i
 }
 
 static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color_name) {
+
     bool res = hsv_editor_rgb_color_storage_add_color(r, g, b, color_name);
     if (!res) {
         char message[] = "Color with that name is already saved\r\n";
@@ -171,6 +172,11 @@ static bool s_save_color_with_name_(uint8_t r, uint8_t g, uint8_t b, char* color
         cli_set_message(message);
         return false;
     }
+
+	if (!hsv_editor_nvm_is_nvm_enabled()) {
+		NRF_LOG_INFO("Named colors save to flash is locked");
+		return false;
+	}
 
     bool is_saved = hsv_editor_nvm_save_added_colors();
     if (!is_saved) {
@@ -285,6 +291,7 @@ static bool s_cli_functions_del_color_proceed_(const char* input, uint8_t args_s
     return true;
 }
 
+// TODO: better return status enum value
 static bool s_cli_functions_add_current_color_(const char* input, uint8_t args_start_idx) {
 
     const uint8_t input_max_len = 28;
@@ -296,11 +303,12 @@ static bool s_cli_functions_add_current_color_(const char* input, uint8_t args_s
 
     char color_name[10];
     string_utils_substring_to_end(input, args_start_idx + 1, color_name);
-    hsv_t hsv = hsv_editor_get_hsv_object();
-    rgb_t rgb = converter_to_rgb_from_hsv(hsv);
+    hsv_t* hsv = hsv_editor_get_hsv_object();
+    rgb_t rgb = converter_to_rgb_from_hsv(*hsv);
 
     bool is_saved = s_save_color_with_name_(rgb.red, rgb.green, rgb.blue, color_name);
-    if (!is_saved) {
+    // WARNING: wtf
+	if (!is_saved) {
         return true;
     }
     
@@ -373,6 +381,8 @@ static bool s_cli_functions_help_proceed_(const char* input, uint8_t args_start_
 static void s_select_command_(const char* command_str, const char* input, const size_t args_start_idx) {
     for (uint16_t com_idx = 0; com_idx < ARRAY_LEN(s_commands_); com_idx++) {
         if (string_utils_compare_string(s_commands_[com_idx].command, command_str)) {
+			// TODO: better redo functions to return enum with statuses
+			// and do switch on them
             if (!s_commands_[com_idx].command_func(input, args_start_idx)) {
                 break;
             } else {

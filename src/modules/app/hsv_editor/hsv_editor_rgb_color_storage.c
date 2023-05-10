@@ -88,8 +88,8 @@ void hsv_editor_rgb_color_storage_delete(char* color_name) {
 
 
 void hsv_editor_rgb_color_storage_add_current_color_from_pwm(char* color_name) {
-    hsv_t current_hsv = hsv_editor_get_hsv_object();
-    rgb_t rgb = converter_to_rgb_from_hsv(current_hsv);
+    hsv_t* current_hsv = hsv_editor_get_hsv_object();
+    rgb_t rgb = converter_to_rgb_from_hsv(*current_hsv);
     hsv_editor_rgb_color_storage_add_color(rgb.red, rgb.green, rgb.blue, color_name);
 }
 
